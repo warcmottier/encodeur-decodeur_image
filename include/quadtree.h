@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 typedef struct noeud{
     unsigned char m; //moyenne de ses quatre fils
@@ -24,12 +25,5 @@ typedef struct quadtree{
  * @return Quadtree 
  */
 Quadtree initQuadtree(int profondeur);
-
-/**
- * @brief ajoute un fils au quadtree
- * 
- * @param quadtree 
- */
-void ajouteFils(Quadtree quadtree, unsigned char m, int epsilon, int u);
 
 #endif
