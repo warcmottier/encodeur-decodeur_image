@@ -7,23 +7,25 @@
 
 typedef struct noeud{
     unsigned char m; //moyenne de ses quatre fils
-    int epsilon; //valeur d'erreur de l'extrapolation
-    int u; // bit 
+    unsigned char epsilon; //valeur d'erreur de l'extrapolation
+    unsigned char u; // bit 
     struct noeud *hg, *hd, *bg, *bd; //pointeur vers le carre cree par la subdivision
-}Noeud;
+}Noeud, *Quadtree;
 
 typedef struct quadtree{
-    Noeud* noeuds; // tableau de noeud representant mon tas d'ordre 3
+    Quadtree *noeuds; // tableau de noeud representant mon tas d'ordre 4
     int tailleTable; // taille de la table de noeud
     int profondeurMax; // profondeur max du quadtree
-}Quadtree;
+}TabQuadtree;
 
 /**
- * @brief initialise le Quadtree
+ * @brief cree et rempli le quadtree a partir du tableau de tableau image rempli des donner du fichier pgm
  * 
+ * @param tailleImage 
+ * @param image 
  * @param profondeur 
- * @return Quadtree 
+ * @return TabQuadtree 
  */
-Quadtree initQuadtree(int profondeur);
+TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int profondeur);
 
 #endif
