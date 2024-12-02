@@ -1,19 +1,19 @@
 CC = gcc
 CFLAGS =-std=c17 -pedantic -Wall
-LDFLAGS = -lMLV
-OBJ = option.o algo.o main.o
+LDFLAGS = -lm
+OBJ = option.o algo.o main.o quadtree.o
 EXE = codec
 SOURCE = src/
-iNCLUDE = include/
+INCLUDE = include/
 
 $(EXE): $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 	
-main.o: $(SOURCE)main.c $(iNCLUDE)option.h
+main.o: $(SOURCE)main.c $(INCLUDE)option.h
 
-option.o: $(SOURCE)option.c $(iNCLUDE)option.h $()
+option.o: $(SOURCE)option.c $(INCLUDE)option.h $(INCLUDE)algo.h
 
-algo.o: $(SOURCE)algo.c $(iNCLUDE)algo.h
+algo.o: $(SOURCE)algo.c $(INCLUDE)algo.h $(INCLUDE)quadtree.h
 
 quadtree.o: $(SOURCE)quadtree.c $(INCLUDE)quadtree.h
 
