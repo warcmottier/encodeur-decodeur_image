@@ -12,10 +12,6 @@ TabQuadtree initQuadtree(int profondeur){
     tree.tailleTable = (pow(4, profondeur + 1) - 1) / 3;
     tree.noeuds = malloc(sizeof(Noeud) * tree.tailleTable);
     for (int i = 0; i < tree.tailleTable; i++){
-        tree.noeuds[i]->hg = NULL;
-        tree.noeuds[i]->hd = NULL;
-        tree.noeuds[i]->bd = NULL;
-        tree.noeuds[i]->bg = NULL;
         tree.noeuds[i]->epsilon = 0;
         tree.noeuds[i]->u = 1;
         tree.noeuds[i]->m = 0;
@@ -45,47 +41,32 @@ Quadtree creeNoeud(TabQuadtree tabQuadtree){
  * @param tree 
  * @param tabQuadtree 
  */
-void rempliQuadtreePGM(int tailleImage , int x , int y, unsigned char** image, Quadtree *tree, TabQuadtree *tabQuadtree){
-    // si on est dans une feuille on arrete
-    if (tailleImage == 1){
-        (*tree)->m = image[x][y];
+void rempliQuadtreePGM(int tailleImage , int x , int y, unsigned char* image, TabQuadtree *tabQuadtree, int index){
+    if(tailleImage == 1){
+        tabQuadtree->noeuds[index]->m = image[y * tailleImage + x];
         return;
     }
 
     int moitierTaille = tailleImage / 2;
 
-    //alloue les fils au noeud courant
-    (*tree)->hg = creeNoeud(*tabQuadtree);
-    tabQuadtree->tailleTable++;
-    (*tree)->hd = creeNoeud(*tabQuadtree);
-    tabQuadtree->tailleTable++;
-    (*tree)->hg = creeNoeud(*tabQuadtree);
-    tabQuadtree->tailleTable++;
-    (*tree)->bd = creeNoeud(*tabQuadtree);
-    tabQuadtree->tailleTable++;
-    (*tree)->bg = creeNoeud(*tabQuadtree);
-    tabQuadtree->tailleTable++;
+    tabQuadtree->tailleTable += 4;
 
-    // on parcour le quadtree
-    rempliQuadtreePGM(moitierTaille, x, y, image, &(*tree)->hg, tabQuadtree); // enfant haut gauche
-    rempliQuadtreePGM(moitierTaille, x, y + moitierTaille, image, &(*tree)->hd, tabQuadtree); // enfant haut droite
-    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y, image, &(*tree)->hg, tabQuadtree); // enfant bas droite
-    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y + moitierTaille, image, &(*tree)->hg, tabQuadtree); // enfant bas gauche
+    rempliQuadtreePGM(moitierTaille, x, y, image, tabQuadtree, 4 * index + 1); // enfant haut gauche
+    rempliQuadtreePGM(moitierTaille, x, y + moitierTaille, image, tabQuadtree, 4 * index + 2); // enfant haut droite
+    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y, image, tabQuadtree, 4 * index + 2); // enfant bas droite
+    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y + moitierTaille, image, tabQuadtree, 4 * index + 2); // enfant bas gauche
 
-    //on rempli le champ m qui est la moyenne des m ces fils
-    (*tree)->m = ((*tree)->hg->m + (*tree)->hd->m + (*tree)->bd->m + (*tree)->bg->m) / 4;
+    tabQuadtree->noeuds[index]->m = (tabQuadtree->noeuds[4 * index + 1]->m + tabQuadtree->noeuds[4 * index + 2]->m + tabQuadtree->noeuds[4 * index + 3]->m + tabQuadtree->noeuds[4 * index + 4]->m) / 4;
+    
+    tabQuadtree->noeuds[index]->epsilon = (tabQuadtree->noeuds[4 * index + 1]->m + tabQuadtree->noeuds[4 * index + 2]->m + tabQuadtree->noeuds[4 * index + 3]->m + tabQuadtree->noeuds[4 * index + 4]->m) % 4;
 
-    // on rempli le champ epsilon qui est le modulo de l'addition des m de ces fils
-    (*tree)->epsilon = ((*tree)->hg->m + (*tree)->hd->m + (*tree)->bd->m + (*tree)->bg->m) % 4;
-
-    // on met le champ u a 0 si l'erreur est different de 0 et si un de ces fils n'est pas uniforme
-    if((*tree)->epsilon != 0 || (*tree)->hg->u != 1 || (*tree)->hd->u != 1 || (*tree)->bd->u != 1 || (*tree)->bg->u != 1)
-        (*tree)->u = 0;
+    if(tabQuadtree->noeuds[index]->epsilon != 0 || tabQuadtree->noeuds[4 * index + 1]->m || tabQuadtree->noeuds[4 * index + 2]->m || tabQuadtree->noeuds[4 * index + 3]->m || tabQuadtree->noeuds[4 * index + 4]->m)
+        tabQuadtree->noeuds[index]->u = 0;
 }
 
-TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int profondeur){
+TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char* image, int profondeur){
     TabQuadtree tree = initQuadtree(profondeur + 1);
     tree.tailleTable++;
-    rempliQuadtreePGM(tailleImage, 0, 0, image, tree.noeuds, &tree);
+    rempliQuadtreePGM(tailleImage, 0, 0, image, &tree, 0);
     return tree;
 }
