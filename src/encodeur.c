@@ -1,7 +1,7 @@
 #include "../include/encodeur.h"
 #include <math.h>
 #include <string.h>
-
+#include <limits.h>
 
 /**
  * @brief calcule la profondeur du quadtree a partir de la taille de l'image
