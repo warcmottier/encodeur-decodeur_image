@@ -9,7 +9,7 @@ INCLUDE = include/
 $(EXE): $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 	
-main.o: $(SOURCE)main.c $(INCLUDE)option.h
+main.o: $(SOURCE)main.c $(INCLUDE)option.h $(INCLUDE)encodeur.h
 
 option.o: $(SOURCE)option.c $(INCLUDE)option.h $(INCLUDE)encodeur.h $(INCLUDE)decodeur.h
 

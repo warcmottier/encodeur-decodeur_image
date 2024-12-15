@@ -10,10 +10,10 @@ typedef struct noeud{
     unsigned char epsilon; //valeur d'erreur de l'extrapolation
     unsigned char u; // bit 
     // struct noeud *hg, *hd, *bg, *bd; pointeur vers le carre cree par la subdivision
-}Noeud, *Quadtree;
+}Noeud;
 
 typedef struct quadtree{
-    Quadtree *noeuds; // tableau de noeud representant mon tas d'ordre 4
+    Noeud *noeuds; // tableau de noeud representant mon tas d'ordre 4
     int tailleTable; // taille de la table de noeud
     int profondeurMax; // profondeur max du quadtree
 }TabQuadtree;
@@ -26,6 +26,13 @@ typedef struct quadtree{
  * @param profondeur 
  * @return TabQuadtree 
  */
-TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char* image, int profondeur);
+TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int profondeur);
+
+/**
+ * @brief affiche le quadtree
+ * 
+ * @param tab 
+ */
+void afficheQuadtree(TabQuadtree tab);
 
 #endif

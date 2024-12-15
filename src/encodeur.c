@@ -10,10 +10,17 @@
  * @return int 
  */
 int profondeur(int taille){
-    return log2(taille) + 1;
+    return log2(taille);
 }
 
-unsigned char* creeTabImage(char* nom, int* taille){
+/**
+ * @brief cree un tableau de la taille de l'image remplis
+ * 
+ * @param nom 
+ * @param taille 
+ * @return unsigned* 
+ */
+unsigned char** creeTabImage(char* nom, int* taille){
     FILE* f;
 
     f = fopen(nom, "rb");
@@ -25,10 +32,11 @@ unsigned char* creeTabImage(char* nom, int* taille){
 
     char enTete[3];
     int maxValGris;
-    unsigned char *image;
+    unsigned char **image;
 
     if(fscanf(f, "%2s", enTete) != 1 || strcmp(enTete, "P5") != 0){
         fprintf(stderr, "erreur format non conforme utilisation du format P5 requis\n");
+        //fclose(f);
         return NULL;
     }
 
@@ -38,7 +46,7 @@ unsigned char* creeTabImage(char* nom, int* taille){
     
     fgets(ligne, sizeof(ligne), f);
 
-    fscanf(f, "%d ", taille);;
+    fscanf(f, "%d ", taille);
 
     fscanf(f, "%d ", taille);
 
@@ -46,23 +54,95 @@ unsigned char* creeTabImage(char* nom, int* taille){
 
     if(maxValGris < 255){
         fprintf(stderr, "erreur valeur max de gris doit être a 255\n");
+        //fclose(f);
         return NULL;
     }
 
-    image = malloc(sizeof(unsigned char) * *taille * *taille);
-    fread(image, sizeof(unsigned char), *taille * *taille, f);
+    image = malloc(sizeof(unsigned char) * (*taille));
     
-    fclose(f);
+    if(image == NULL){
+        //fclose(f);
+        return NULL;
+    }
+
+    for(int i = 0; i < *taille; i++){
+        image[i] = malloc(sizeof(unsigned char) * (*taille));
+        
+        if(image[i] == NULL){
+            
+            for (int j = 0; j < i; j++)
+                free(image[j]);
+            
+            free(image);
+            //fclose(f);
+            
+            return NULL;
+        }
+    }
+
+    for(int i = 0; i < *taille; i++){
+        for(int j = 0; j < *taille; j++){
+            image[i][j] = fgetc(f);
+        }
+    }
+
+    //fclose(f);
 
     return image;
 }
 
+/**
+ * @brief prend le nom du fichier .pgm et renvoie le nom de se meme fichier mais en .qtc
+ * 
+ * @param fichierPGM 
+ * @return char* 
+ */
+char* nouvelleExtension(const char* fichierPGM){
+    const char* point = strrchr(fichierPGM, '.');
+
+    int longPrefixe = point - fichierPGM;
+    int longNouveau = longPrefixe + 4;
+
+    char* fichierQTC = malloc(sizeof(char) * longNouveau);
+    if(fichierQTC == NULL)
+        return NULL;
+    
+    strncpy(fichierQTC, fichierPGM, longPrefixe);
+
+    strcpy(fichierQTC + longPrefixe, ".qtc");
+
+    return fichierQTC;
+}
+
+/**
+ * @brief cree et ecrit le qtc
+ * 
+ * @param tab 
+ * @param nom 
+ */
+void ecrireQTC(TabQuadtree tab, const char* nom){
+    FILE* f2 = fopen(nom, "wb");
+
+    if(f2 == NULL){
+        return;
+    }
+
+
+
+}
+
+/**
+ * @brief algo principale pour encoder une image pgm en qtc
+ * 
+ * @param nom 
+ */
 void codage(char* nom){
     int taille;
-    unsigned char* image;
+    unsigned char** image;
     TabQuadtree tree;
-
     image = creeTabImage(nom, &taille);
 
     tree = constructeurQuadtreePGM(taille, image, profondeur(taille));
+
+    afficheQuadtree(tree);
 }

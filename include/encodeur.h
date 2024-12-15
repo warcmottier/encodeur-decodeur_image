@@ -8,9 +8,10 @@
 /**
  * @brief algorythme d'encodage d'un fichier source PGM pour en faire un fichier destination qtc compresser
  * 
- * @param source 
- * @param destination 
+ * @param nom 
  */
-void encode(FILE* source, FILE* destination);
+void codage(char* nom);
+
+
 
 #endif
