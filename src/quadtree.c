@@ -55,9 +55,9 @@ void rempliQuadtreePGM(int tailleImage, int x, int y, unsigned char** image, Tab
     int moitierTaille = tailleImage / 2;
 
     rempliQuadtreePGM(moitierTaille, x, y, image, tabQuadtree, 4 * index + 1); // enfant haut gauche
-    rempliQuadtreePGM(moitierTaille, x, y + moitierTaille, image, tabQuadtree, 4 * index + 2); // enfant haut droit
-    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y + moitierTaille, image, tabQuadtree, 4 * index + 3); // enfant bas gauche
-    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y, image, tabQuadtree, 4 * index + 4); // enfant bas droit
+    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y, image, tabQuadtree, 4 * index + 2); // enfant haut droit
+    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y + moitierTaille, image, tabQuadtree, 4 * index + 3); // enfant bas droit
+    rempliQuadtreePGM(moitierTaille, x, y + moitierTaille, image, tabQuadtree, 4 * index + 4); // enfant bas gauche
 
     printf("%d + %d + %d + %d / 4 : %d\n", tabQuadtree->noeuds[4 * index + 1].m, 
                                            tabQuadtree->noeuds[4 * index + 2].m,

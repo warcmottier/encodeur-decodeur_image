@@ -36,7 +36,7 @@ unsigned char** creeTabImage(char* nom, int* taille){
 
     if(fscanf(f, "%2s", enTete) != 1 || strcmp(enTete, "P5") != 0){
         fprintf(stderr, "erreur format non conforme utilisation du format P5 requis\n");
-        //fclose(f);
+        fclose(f);
         return NULL;
     }
 
@@ -54,39 +54,34 @@ unsigned char** creeTabImage(char* nom, int* taille){
 
     if(maxValGris < 255){
         fprintf(stderr, "erreur valeur max de gris doit être a 255\n");
-        //fclose(f);
+        fclose(f);
         return NULL;
     }
 
-    image = malloc(sizeof(unsigned char) * (*taille));
+    image = malloc(sizeof(unsigned char*) * (*taille));
     
-    if(image == NULL){
-        //fclose(f);
-        return NULL;
-    }
-
-    for(int i = 0; i < *taille; i++){
+    for(int i = 0; i < (*taille); i++){
         image[i] = malloc(sizeof(unsigned char) * (*taille));
         
         if(image[i] == NULL){
-            
-            for (int j = 0; j < i; j++)
+            for(int j = 0; j < i; j++){
                 free(image[j]);
-            
+            }
+
             free(image);
-            //fclose(f);
-            
+            fclose(f);
             return NULL;
         }
     }
 
-    for(int i = 0; i < *taille; i++){
-        for(int j = 0; j < *taille; j++){
+    for(int i = 0; i < (*taille); i++){
+        for(int j = 0; j < (*taille); j++){
             image[i][j] = fgetc(f);
         }
     }
 
-    //fclose(f);
+    fclose(f);
+
 
     return image;
 }
@@ -116,26 +111,29 @@ char* nouvelleExtension(const char* fichierPGM){
 
 /**
  * @brief cree et ecrit le qtc
+ * parcourir l'arbre pour recup le nombre de e u et m a ecrire 
+ * pour calculer le taux de compression (taille * taille * 8) / (e * 3 + u * 1 + m * 8) * 100
  * 
  * @param tab 
  * @param nom 
  */
 void ecrireQTC(TabQuadtree tab, const char* nom){
     FILE* f2 = fopen(nom, "wb");
+    BitStream bit;
+
+    bit.ptr = malloc(sizeof(unsigned char) * );
 
     if(f2 == NULL){
         return;
     }
 
+    for(int i = 0; i < tab.tailleTable; i++){
 
+    }
 
 }
 
-/**
- * @brief algo principale pour encoder une image pgm en qtc
- * 
- * @param nom 
- */
+
 void codage(char* nom){
     int taille;
     unsigned char** image;
@@ -143,6 +141,8 @@ void codage(char* nom){
     image = creeTabImage(nom, &taille);
 
     tree = constructeurQuadtreePGM(taille, image, profondeur(taille));
+
+    ecrireQTC(tree, nouvelleExtension(nom));
 
     afficheQuadtree(tree);
 }
