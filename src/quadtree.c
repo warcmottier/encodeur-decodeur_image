@@ -9,7 +9,6 @@
 TabQuadtree initQuadtree(int profondeur){
     TabQuadtree tree;
     tree.tailleTable = (((int) pow(4, profondeur)) - 1) / 3;
-    printf("%d\n", tree.tailleTable);
     tree.noeuds = malloc(sizeof(Noeud) * tree.tailleTable);
     if(tree.noeuds == NULL)
         return tree;
@@ -48,7 +47,7 @@ Noeud creeNoeud(TabQuadtree tabQuadtree){
 void rempliQuadtreePGM(int tailleImage, int x, int y, unsigned char** image, TabQuadtree *tabQuadtree, int index) {
     // Cas de base : taille de l'image = 1
     if (tailleImage == 1) {
-        tabQuadtree->noeuds[index].m = image[x][y];  // On affecte la valeur à m
+        tabQuadtree->noeuds[index].m = image[y][x];  // On affecte la valeur à m
         return;
     }
 
@@ -58,15 +57,6 @@ void rempliQuadtreePGM(int tailleImage, int x, int y, unsigned char** image, Tab
     rempliQuadtreePGM(moitierTaille, x + moitierTaille, y, image, tabQuadtree, 4 * index + 2); // enfant haut droit
     rempliQuadtreePGM(moitierTaille, x + moitierTaille, y + moitierTaille, image, tabQuadtree, 4 * index + 3); // enfant bas droit
     rempliQuadtreePGM(moitierTaille, x, y + moitierTaille, image, tabQuadtree, 4 * index + 4); // enfant bas gauche
-
-    printf("%d + %d + %d + %d / 4 : %d\n", tabQuadtree->noeuds[4 * index + 1].m, 
-                                           tabQuadtree->noeuds[4 * index + 2].m,
-                                           tabQuadtree->noeuds[4 * index + 3].m,
-                                           tabQuadtree->noeuds[4 * index + 4].m, 
-                                           (tabQuadtree->noeuds[4 * index + 1].m + 
-                                    tabQuadtree->noeuds[4 * index + 2].m + 
-                                    tabQuadtree->noeuds[4 * index + 3].m + 
-                                    tabQuadtree->noeuds[4 * index + 4].m) / 4);
 
     tabQuadtree->noeuds[index].m = (tabQuadtree->noeuds[4 * index + 1].m + 
                                     tabQuadtree->noeuds[4 * index + 2].m + 

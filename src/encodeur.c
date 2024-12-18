@@ -110,6 +110,73 @@ char* nouvelleExtension(const char* fichierPGM){
 }
 
 /**
+ * @brief calcule le nombre de donner a ecrire
+ * 
+ * @param nbm 
+ * @param nbe 
+ * @param nbu 
+ * @param quadtree 
+ * @param index 
+ * @param profondeurMax 
+ * @param noeud4 
+ */
+void nbDonnee(int* nbm, int* nbe, int* nbu, TabQuadtree quadtree, int index, int profondeurMax, int noeud4){
+    static int profondeurActu = 0;
+    
+    if(index >= quadtree.tailleTable){
+        profondeurActu--;
+        return;
+    }
+
+    if(noeud4 != 1)
+        *nbm++;
+
+    if(profondeurActu == profondeurMax){
+        profondeurActu--;
+        return;
+    }
+
+    if(quadtree.noeuds[index].epsilon == 0){
+        *nbu++;
+    }
+
+    *nbe++;
+
+    profondeurActu++;
+    nbDonnee(nbm, nbe, nbu, quadtree, 4 * index + 1, profondeurMax, 0); //1er fils
+    nbDonnee(nbm, nbe, nbu, quadtree, 4 * index + 2, profondeurMax, 0); //2eme fils
+    nbDonnee(nbm, nbe, nbu, quadtree, 4 * index + 3, profondeurMax, 0); //3eme fils
+    nbDonnee(nbm, nbe, nbu, quadtree, 4 * index + 4, profondeurMax, 1); //4eme fils
+
+    profondeurActu--;
+
+}
+
+int totalOctet(int nbm, int nbe, int nbu){
+    int res = nbm * 8 + nbe * 2 + nbu;
+    res += res % 8;
+    return res / 8;
+}
+
+void remplirBit(BitStream* bit, TabQuadtree quadtree, int index, int profondeurMax, int noeud4){
+    if(index >= quadtree.tailleTable){
+        return;
+    }
+
+    if(noeud4 != 1){
+        pushbits(bit, quadtree.noeuds[index].m, 8);
+    }
+
+    pushbits(bit, quadtree.noeuds[index].epsilon, 3);
+    
+    if(quadtree.noeuds[index].epsilon == 0)
+        pushbits(bit, quadtree.noeuds[index].u, 1);
+    
+    
+
+}
+
+/**
  * @brief cree et ecrit le qtc
  * parcourir l'arbre pour recup le nombre de e u et m a ecrire 
  * pour calculer le taux de compression (taille * taille * 8) / (e * 3 + u * 1 + m * 8) * 100
@@ -117,32 +184,29 @@ char* nouvelleExtension(const char* fichierPGM){
  * @param tab 
  * @param nom 
  */
-void ecrireQTC(TabQuadtree tab, const char* nom){
-    FILE* f2 = fopen(nom, "wb");
+void ecrireQTC(TabQuadtree tab, const char* nom, int profondeurs){
+    int nbm, nbe, nbu;
+    FILE* f = fopen(nom, "wb");
     BitStream bit;
+    
+    nbDonnee(&nbm, &nbe, &nbu, tab, 0, profondeurs, 0);
 
-    bit.ptr = malloc(sizeof(unsigned char) * );
-
-    if(f2 == NULL){
-        return;
-    }
-
-    for(int i = 0; i < tab.tailleTable; i++){
-
-    }
+    
+    bit.ptr = malloc(sizeof(unsigned char) * totalOctet(nbm, nbe, nbu));
 
 }
 
 
 void codage(char* nom){
-    int taille;
+    int taille, profondeurs;
     unsigned char** image;
     TabQuadtree tree;
     image = creeTabImage(nom, &taille);
+    profondeurs = profondeur(taille);
 
-    tree = constructeurQuadtreePGM(taille, image, profondeur(taille));
+    tree = constructeurQuadtreePGM(taille, image, profondeurs);
 
-    ecrireQTC(tree, nouvelleExtension(nom));
+    //ecrireQTC(tree, nouvelleExtension(nom));
 
     afficheQuadtree(tree);
 }
