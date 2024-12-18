@@ -6,6 +6,8 @@
 
 typedef struct { 
     unsigned char* ptr; // tableau de la taille de l'image 
+    int index; // l'indice actuelle du tableau
+    int tailleTotal;
     size_t capa; // capaciter restant sur le byte
 } BitStream;
 
@@ -14,9 +16,8 @@ typedef struct {
  * 
  * @param curr 
  * @param src 
- * @param nbit 
- * @return size_t 
+ * @return  
  */
-size_t pushbits(BitStream* curr, unsigned char src, size_t nbit);
+void pushbits(BitStream* curr, unsigned char src);
 
 #endif

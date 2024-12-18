@@ -26,37 +26,11 @@ void setbit(unsigned char* byte, size_t b, unsigned char valb){
     *byte = (*byte | (1 << b)) ^ (1 << b);
 }
 
-size_t pushbits(BitStream* curr, unsigned char src, size_t nbit){
-    int diff = 0;
-    size_t totalBit = 0;
-
-    if(curr->capa == 0){
-        curr->capa = CHAR_BIT;
-        curr->ptr++;
+void pushbits(BitStream* curr, unsigned char src){
+    if(curr->capa == CHAR_BIT){
+      curr->capa = 0;
+      curr->index++;
     }
-
-    if(curr->ptr)
-        return totalBit;
-    
-    if(curr->capa <= nbit){
-        for(int i = 0; i < nbit; i++){
-            curr->capa--;
-            setbit(curr->ptr, CHAR_BIT - curr->capa, getbit(src, i));
-            totalBit++;
-        }
-    }
-    else{
-        diff = nbit - curr->capa;
-        for(int i = 0; i < nbit; i++){
-            curr->capa--;
-            setbit(curr->ptr, CHAR_BIT - curr->capa, getbit(src, i));
-            if(nbit == diff){
-                curr->capa = CHAR_BIT;
-                curr->ptr++;
-                if(!curr->ptr)
-                    return totalBit;
-            }
-            totalBit++;
-        }
-    }
+  curr->ptr[curr->index] |= (src << (CHAR_BIT - 1 - curr->capa));
+  curr->capa++;
 }

@@ -1,6 +1,7 @@
 #include "../include/encodeur.h"
 #include <math.h>
 #include <string.h>
+#include <time.h>
 #include <limits.h>
 
 /**
@@ -158,21 +159,46 @@ int totalOctet(int nbm, int nbe, int nbu){
     return res / 8;
 }
 
+/**
+ * @brief remplis le tableau d'octet
+ * 
+ * @param bit 
+ * @param quadtree 
+ * @param index 
+ * @param profondeurMax 
+ * @param noeud4 
+ */
 void remplirBit(BitStream* bit, TabQuadtree quadtree, int index, int profondeurMax, int noeud4){
+    static int profondeurActu = 0;
+
     if(index >= quadtree.tailleTable){
+        profondeurActu--;
         return;
     }
 
     if(noeud4 != 1){
-        pushbits(bit, quadtree.noeuds[index].m, 8);
+        for(int i = 7; i >= 0; i--)
+            pushbits(bit, quadtree.noeuds[index].m >> i);
     }
 
-    pushbits(bit, quadtree.noeuds[index].epsilon, 3);
+    if(profondeurActu == profondeurMax){
+        profondeurActu--;
+        return;    
+    }
+
+    for(int i = 1; i >= 0; i++)
+        pushbits(bit, quadtree.noeuds[index].epsilon >> i);
     
     if(quadtree.noeuds[index].epsilon == 0)
-        pushbits(bit, quadtree.noeuds[index].u, 1);
-    
-    
+        pushbits(bit, quadtree.noeuds[index].u);
+
+    profondeurActu++;    
+    remplirBit(bit, quadtree, 4 * index + 1, profondeurMax, 0); // 1er fils
+    remplirBit(bit, quadtree, 4 * index + 2, profondeurMax, 0); // 2eme fils
+    remplirBit(bit, quadtree, 4 * index + 3, profondeurMax, 0); // 3eme fils
+    remplirBit(bit, quadtree, 4 * index + 4, profondeurMax, 1); // 4eme fils
+
+    profondeurActu--;
 
 }
 
@@ -184,16 +210,46 @@ void remplirBit(BitStream* bit, TabQuadtree quadtree, int index, int profondeurM
  * @param tab 
  * @param nom 
  */
-void ecrireQTC(TabQuadtree tab, const char* nom, int profondeurs){
+void ecrireQTC(TabQuadtree tab, const char* nom, int profondeurs, int taille){
     int nbm, nbe, nbu;
+    time_t actuelle;
+    struct tm *infoTemp;
+    
     FILE* f = fopen(nom, "wb");
+
+    if(f == NULL){
+        fprintf(stderr, "erreur fichier ne peut pas s'ouvrir\n");
+    }
+
     BitStream bit;
     
     nbDonnee(&nbm, &nbe, &nbu, tab, 0, profondeurs, 0);
 
-    
-    bit.ptr = malloc(sizeof(unsigned char) * totalOctet(nbm, nbe, nbu));
+    bit.capa = 0;
+    bit.index = 0;
+    bit.tailleTotal = totalOctet(nbm, nbe, nbu);
+    bit.ptr = malloc(sizeof(unsigned char) * bit.tailleTotal);
 
+    remplirBit(&bit, tab, 0, profondeurs, 0);
+
+    fprintf(f, "Q1\n");
+    
+    time(&actuelle);
+    infoTemp = localtime(&actuelle);
+
+    fprintf(f, "# crée le %d-%d-%d à %d:%d:%d\n", infoTemp->tm_mday, 
+                                                 infoTemp->tm_mon + 1,
+                                                 infoTemp->tm_year,
+                                                 infoTemp->tm_hour,
+                                                 infoTemp->tm_min,
+                                                 infoTemp->tm_sec);
+    
+
+    fprintf(f, "# taux de compression : %d\n", taille * taille * 8 / bit.tailleTotal);
+    
+    fwrite(bit.ptr, sizeof(unsigned char), bit.tailleTotal, f);
+
+    fclose(f);
 }
 
 
@@ -205,8 +261,9 @@ void codage(char* nom){
     profondeurs = profondeur(taille);
 
     tree = constructeurQuadtreePGM(taille, image, profondeurs);
-
-    //ecrireQTC(tree, nouvelleExtension(nom));
-
+    
     afficheQuadtree(tree);
+
+    ecrireQTC(tree, nouvelleExtension(nom), profondeurs, taille);
+
 }
