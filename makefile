@@ -15,7 +15,7 @@ option.o: $(SOURCE)option.c $(INCLUDE)option.h $(INCLUDE)encodeur.h $(INCLUDE)de
 
 encodeur.o: $(SOURCE)encodeur.c $(INCLUDE)encodeur.h $(INCLUDE)quadtree.h $(INCLUDE)gereBit.h
 
-decodeur.o : $(SOURCE)decodeur.c $(INCLUDE)decodeur.h $(INCLUDE)quadtree.h $(INCLUDE)gereBit .h
+decodeur.o : $(SOURCE)decodeur.c $(INCLUDE)decodeur.h $(INCLUDE)quadtree.h $(INCLUDE)gereBit.h
 
 quadtree.o: $(SOURCE)quadtree.c $(INCLUDE)quadtree.h
 

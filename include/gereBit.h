@@ -18,6 +18,21 @@ typedef struct {
  * @param src 
  * @return  
  */
-void pushbits(BitStream* curr, unsigned char src);
+size_t pushbits(BitStream* curr, unsigned char src, size_t nbit);
+
+/**
+ * @brief affiche un octet
+ * 
+ * @param n 
+ */
+void afficherBinaire8Bits(unsigned char n);
+
+/**
+ * @brief ecrit un seul bit dans l'octet courant du bitstream
+ * 
+ * @param bs 
+ * @param bit 
+ */
+void ecrireBit(BitStream *bs, unsigned char bit);
 
 #endif

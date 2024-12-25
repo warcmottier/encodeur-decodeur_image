@@ -18,6 +18,7 @@ TabQuadtree initQuadtree(int profondeur){
         tree.noeuds[i].epsilon = 0;
         tree.noeuds[i].u = 1;
         tree.noeuds[i].m = 0;
+        tree.noeuds[i].affiche = 1;
     }
     
     return tree;
@@ -33,6 +34,19 @@ Noeud creeNoeud(TabQuadtree tabQuadtree){
     return tabQuadtree.noeuds[tabQuadtree.tailleTable];
 }
 
+void flagAffiche(TabQuadtree* quadtree, int index){
+    if(4 * index + 1 >= quadtree->tailleTable){
+        quadtree->noeuds[index].affiche = 0;
+        return;
+    }
+
+    quadtree->noeuds[index].affiche = 0;
+    flagAffiche(quadtree, 4 * index + 1); //1er fils
+    flagAffiche(quadtree, 4 * index + 2); //2eme fils
+    flagAffiche(quadtree, 4 * index + 3); //3eme fils
+    flagAffiche(quadtree, 4 * index + 4); //4eme fils
+
+}
 
 /**
  * @brief rempli le quadtree a partir des pointeur et en recursive
@@ -63,10 +77,18 @@ void rempliQuadtreePGM(int tailleImage, int x, int y, unsigned char** image, Tab
                                     tabQuadtree->noeuds[4 * index + 3].m + 
                                     tabQuadtree->noeuds[4 * index + 4].m) / 4;
 
-    tabQuadtree->noeuds[index].epsilon = tabQuadtree->noeuds[4 * index + 1].m + tabQuadtree->noeuds[4 * index + 2].m + tabQuadtree->noeuds[4 * index + 3].m + tabQuadtree->noeuds[4 * index + 4].m % 4; 
+    tabQuadtree->noeuds[index].epsilon = (tabQuadtree->noeuds[4 * index + 1].m + tabQuadtree->noeuds[4 * index + 2].m + tabQuadtree->noeuds[4 * index + 3].m + tabQuadtree->noeuds[4 * index + 4].m) % 4; 
 
-    if(tabQuadtree->noeuds[index].epsilon != 0 || tabQuadtree->noeuds[4 * index + 1].m || tabQuadtree->noeuds[4 * index + 2].m || tabQuadtree->noeuds[4 * index + 3].m || tabQuadtree->noeuds[4 * index + 4].m)
-        tabQuadtree->noeuds[index].u = 0;
+    if(tabQuadtree->noeuds[index].epsilon != 0 
+        || tabQuadtree->noeuds[4 * index + 1].u == 0 || tabQuadtree->noeuds[4 * index + 2].u == 0 || tabQuadtree->noeuds[4 * index + 3].u == 0 || tabQuadtree->noeuds[4 * index + 4].u == 0 
+        || tabQuadtree->noeuds[4 * index + 1].m != tabQuadtree->noeuds[4 * index + 2].m || tabQuadtree->noeuds[ 4 * index + 1].m != tabQuadtree->noeuds[ 4 * index + 3].m || tabQuadtree->noeuds[ 4 * index + 1].m != tabQuadtree->noeuds[ 4 * index + 4].m){
+            tabQuadtree->noeuds[index].u = 0;
+    }
+    else{
+        flagAffiche(tabQuadtree, index);
+        tabQuadtree->noeuds[index].affiche = 1;
+    }
+        
 }
 
 
@@ -78,7 +100,7 @@ TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int 
 
 void afficheQuadtree(TabQuadtree tab){
     for(int i = 0; i < tab.tailleTable; i++){
-        printf("%d ", tab.noeuds[i].m);
+        printf("(%d %d %d)", tab.noeuds[i].m, tab.noeuds[i].epsilon, tab.noeuds[i].u);
     }
     printf("\n");
 }

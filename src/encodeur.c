@@ -42,10 +42,13 @@ unsigned char** creeTabImage(char* nom, int* taille){
     }
 
     fgetc(f);
-
-    char ligne[100];
     
-    fgets(ligne, sizeof(ligne), f);
+    char ligne[100];
+    do {
+        fgets(ligne, sizeof(ligne), f);
+    } while (ligne[0] == '#');
+
+    fseek(f, -strlen(ligne), SEEK_CUR);
 
     fscanf(f, "%d ", taille);
 
@@ -53,7 +56,7 @@ unsigned char** creeTabImage(char* nom, int* taille){
 
     fscanf(f, "%d ", &maxValGris);
 
-    if(maxValGris < 255){
+    if(maxValGris == 255){
         fprintf(stderr, "erreur valeur max de gris doit être a 255\n");
         fclose(f);
         return NULL;
@@ -85,6 +88,15 @@ unsigned char** creeTabImage(char* nom, int* taille){
 
 
     return image;
+}
+
+void libererImage(unsigned char** image, int taille){
+    
+    for(int i = 0; i < taille; i++)
+        free(image[i]);
+    free(image);
+
+    return;
 }
 
 /**
@@ -130,7 +142,7 @@ void nbDonnee(int* nbm, int* nbe, int* nbu, TabQuadtree quadtree, int index, int
     }
 
     if(noeud4 != 1)
-        *nbm++;
+        (*nbm)++;
 
     if(profondeurActu == profondeurMax){
         profondeurActu--;
@@ -138,29 +150,32 @@ void nbDonnee(int* nbm, int* nbe, int* nbu, TabQuadtree quadtree, int index, int
     }
 
     if(quadtree.noeuds[index].epsilon == 0){
-        *nbu++;
+        (*nbu)++;
     }
 
-    *nbe++;
+    (*nbe)++;
+
+    if(quadtree.noeuds[index].u == 1 && quadtree.noeuds[index].epsilon == 0){
+        //printf("coucou %d %d %d\n", quadtree.noeuds[index].m, quadtree.noeuds[index].epsilon, quadtree.noeuds[index].u);
+        profondeurActu--;
+        return;
+    }
 
     profondeurActu++;
     nbDonnee(nbm, nbe, nbu, quadtree, 4 * index + 1, profondeurMax, 0); //1er fils
+    profondeurActu++;
     nbDonnee(nbm, nbe, nbu, quadtree, 4 * index + 2, profondeurMax, 0); //2eme fils
+    profondeurActu++;
     nbDonnee(nbm, nbe, nbu, quadtree, 4 * index + 3, profondeurMax, 0); //3eme fils
+    profondeurActu++;
     nbDonnee(nbm, nbe, nbu, quadtree, 4 * index + 4, profondeurMax, 1); //4eme fils
 
     profondeurActu--;
 
 }
 
-int totalOctet(int nbm, int nbe, int nbu){
-    int res = nbm * 8 + nbe * 2 + nbu;
-    res += res % 8;
-    return res / 8;
-}
-
 /**
- * @brief remplis le tableau d'octet
+ * @brief rempli le tableau de bit bit par bit pour pouvoir ecrire tout les octet d'un coup
  * 
  * @param bit 
  * @param quadtree 
@@ -168,39 +183,62 @@ int totalOctet(int nbm, int nbe, int nbu){
  * @param profondeurMax 
  * @param noeud4 
  */
-void remplirBit(BitStream* bit, TabQuadtree quadtree, int index, int profondeurMax, int noeud4){
-    static int profondeurActu = 0;
+void remplirBit(BitStream* bit, TabQuadtree quadtree, int index, int profondeurMax, int noeud4) {
 
-    if(index >= quadtree.tailleTable){
-        profondeurActu--;
-        return;
+    for(int i = 0; i < quadtree.tailleTable; i++){
+
+        if(quadtree.noeuds[i].affiche == 0){
+            continue;
+        }
+
+        if (4 * i + 1 >= quadtree.tailleTable && i % 4 != 0){
+            for(int j = 7; j >= 0; j--){
+                ecrireBit(bit, (quadtree.noeuds[i].m >> j) & 1);
+            }
+            continue;
+        }
+
+        if(4 * i + 1 >= quadtree.tailleTable && i % 4 == 0){
+            
+            continue;
+        }
+        
+        if(i == 0 || i % 4 != 0){
+            for(int j = 7; j >= 0; j--){
+                ecrireBit(bit, (quadtree.noeuds[i].m >> j) & 1);
+            }
+        }
+
+        for (int j = 1; j >= 0; j--) {
+            ecrireBit(bit, (quadtree.noeuds[i].epsilon >> j) & 1);
+        }
+
+        if(quadtree.noeuds[i].epsilon == 0){
+            ecrireBit(bit, quadtree.noeuds[i].u);
+        }
     }
-
-    if(noeud4 != 1){
-        for(int i = 7; i >= 0; i--)
-            pushbits(bit, quadtree.noeuds[index].m >> i);
-    }
-
-    if(profondeurActu == profondeurMax){
-        profondeurActu--;
-        return;    
-    }
-
-    for(int i = 1; i >= 0; i++)
-        pushbits(bit, quadtree.noeuds[index].epsilon >> i);
-    
-    if(quadtree.noeuds[index].epsilon == 0)
-        pushbits(bit, quadtree.noeuds[index].u);
-
-    profondeurActu++;    
-    remplirBit(bit, quadtree, 4 * index + 1, profondeurMax, 0); // 1er fils
-    remplirBit(bit, quadtree, 4 * index + 2, profondeurMax, 0); // 2eme fils
-    remplirBit(bit, quadtree, 4 * index + 3, profondeurMax, 0); // 3eme fils
-    remplirBit(bit, quadtree, 4 * index + 4, profondeurMax, 1); // 4eme fils
-
-    profondeurActu--;
 
 }
+
+/**
+ * @brief initialise le bitstream
+ * 
+ * @param tailleTotal 
+ * @return BitStream 
+ */
+BitStream initBitStream(int tailleTotal){
+    BitStream bit;
+    bit.capa = 8;
+    bit.index = 0;
+    bit.tailleTotal = tailleTotal;
+    bit.ptr = malloc(sizeof(unsigned char) * bit.tailleTotal);
+    for(int i = 0; i < tailleTotal; i++){
+        bit.ptr[i] = 0;
+    }
+    
+    return bit;
+}
+
 
 /**
  * @brief cree et ecrit le qtc
@@ -210,8 +248,8 @@ void remplirBit(BitStream* bit, TabQuadtree quadtree, int index, int profondeurM
  * @param tab 
  * @param nom 
  */
-void ecrireQTC(TabQuadtree tab, const char* nom, int profondeurs, int taille){
-    int nbm, nbe, nbu;
+void ecrireQTC(TabQuadtree tab, const char* nom, unsigned char profondeurs, int taille){
+    int nbm = 0, nbe = 0, nbu = 0;
     time_t actuelle;
     struct tm *infoTemp;
     
@@ -221,18 +259,19 @@ void ecrireQTC(TabQuadtree tab, const char* nom, int profondeurs, int taille){
         fprintf(stderr, "erreur fichier ne peut pas s'ouvrir\n");
     }
 
-    BitStream bit;
     
     nbDonnee(&nbm, &nbe, &nbu, tab, 0, profondeurs, 0);
+    
+    BitStream bit = initBitStream(totalOctet(nbm, nbe, nbu));
 
-    bit.capa = 0;
-    bit.index = 0;
-    bit.tailleTotal = totalOctet(nbm, nbe, nbu);
-    bit.ptr = malloc(sizeof(unsigned char) * bit.tailleTotal);
-
-    remplirBit(&bit, tab, 0, profondeurs, 0);
+    if(bit.ptr == NULL){
+        fprintf(stderr, "erreur malloc pas assez de memoire\n");
+        fclose(f);
+        return;
+    }
 
     fprintf(f, "Q1\n");
+
     
     time(&actuelle);
     infoTemp = localtime(&actuelle);
@@ -243,10 +282,13 @@ void ecrireQTC(TabQuadtree tab, const char* nom, int profondeurs, int taille){
                                                  infoTemp->tm_hour,
                                                  infoTemp->tm_min,
                                                  infoTemp->tm_sec);
-    
 
-    fprintf(f, "# taux de compression : %d\n", taille * taille * 8 / bit.tailleTotal);
+    fprintf(f, "# taux de compression : %f%%\n", ((float) (nbm * 8 + nbe * 2 + nbu) / (taille * taille * 8)) * 100 );
     
+    fwrite(&profondeurs, sizeof(unsigned char), 1, f);
+
+    remplirBit(&bit, tab, 0, profondeurs, 0);
+
     fwrite(bit.ptr, sizeof(unsigned char), bit.tailleTotal, f);
 
     fclose(f);
@@ -258,11 +300,12 @@ void codage(char* nom){
     unsigned char** image;
     TabQuadtree tree;
     image = creeTabImage(nom, &taille);
+    if(image == NULL)
+        return;
     profondeurs = profondeur(taille);
 
     tree = constructeurQuadtreePGM(taille, image, profondeurs);
-    
-    afficheQuadtree(tree);
+    libererImage(image, taille);
 
     ecrireQTC(tree, nouvelleExtension(nom), profondeurs, taille);
 

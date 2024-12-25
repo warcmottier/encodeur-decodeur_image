@@ -8,7 +8,8 @@
 typedef struct noeud{
     unsigned char m; //moyenne de ses quatre fils
     unsigned char epsilon; //valeur d'erreur de l'extrapolation
-    unsigned char u; // bit 
+    unsigned char u; // bit uniforme
+    int affiche; // flag si je dois ecrire le noeud dans le qtc
     // struct noeud *hg, *hd, *bg, *bd; pointeur vers le carre cree par la subdivision
 }Noeud;
 
