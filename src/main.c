@@ -1,7 +1,7 @@
 
 #include "../include/option.h"
-#include "../include/encodeur.h"
+#include "../include/decodeur.h"
 int main(){
-    codage("TEST4x4.pgm");
+    decode("TEST4x4.qtc");
     return 0;
 }

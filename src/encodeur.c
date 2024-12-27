@@ -105,7 +105,7 @@ void libererImage(unsigned char** image, int taille){
  * @param fichierPGM 
  * @return char* 
  */
-char* nouvelleExtension(const char* fichierPGM){
+char* ExtensionQTC(const char* fichierPGM){
     const char* point = strrchr(fichierPGM, '.');
 
     int longPrefixe = point - fichierPGM;
@@ -239,6 +239,9 @@ BitStream initBitStream(int tailleTotal){
     return bit;
 }
 
+int totalOctet(int nbm, int nbe, int nbu){
+    return (nbm * 8 + nbe * 2 + nbu + 7) / 8;
+}
 
 /**
  * @brief cree et ecrit le qtc
@@ -307,6 +310,6 @@ void codage(char* nom){
     tree = constructeurQuadtreePGM(taille, image, profondeurs);
     libererImage(image, taille);
 
-    ecrireQTC(tree, nouvelleExtension(nom), profondeurs, taille);
+    ecrireQTC(tree, ExtensionQTC(nom), profondeurs, taille);
 
 }

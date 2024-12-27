@@ -19,6 +19,7 @@ TabQuadtree initQuadtree(int profondeur){
         tree.noeuds[i].u = 1;
         tree.noeuds[i].m = 0;
         tree.noeuds[i].affiche = 1;
+        tree.profondeurMax = profondeur;
     }
     
     return tree;
@@ -96,6 +97,71 @@ TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int 
     TabQuadtree tree = initQuadtree(profondeur + 1);
     rempliQuadtreePGM(tailleImage, 0, 0, image, &tree, 0);
     return tree;
+}
+
+/**
+ * @brief trouve le parent d'un fils
+ * 
+ * @param index 
+ * @return int 
+ */
+int trouverParent(int index) {
+    if (index <= 0) {
+        return -1;
+    }
+    return (index - 1) / 4;
+}
+
+void constructeurQuadtreeQTC(int profondeur, TabQuadtree* quadtree, FILE* f){
+    *quadtree = initQuadtree(profondeur + 1);
+    int racine = 1, noeud4 = 0;
+    for(int i = 0; i < quadtree->tailleTable; i++){
+        
+        if(!quadtree->noeuds[i].affiche)
+            continue;
+
+        if(!racine)
+            noeud4++;
+        else
+            racine = 0;
+        
+        // somme nous sur une feuille
+        if(4 * i + 1 >= quadtree->tailleTable){
+            //interpolation
+            if(noeud4 == 4){
+                quadtree->noeuds[i].m = (4 * quadtree->noeuds[trouverParent(i)].m 
+                        + quadtree->noeuds[trouverParent(i)].epsilon) 
+                        - (quadtree->noeuds[i-1].m + quadtree->noeuds[i - 2].m
+                        + quadtree->noeuds[i - 3].m);
+            }
+            else{
+            //lire uniquement les m des feuille
+            }
+            continue;
+        }
+
+        //interpolation
+        if(noeud4 == 4){
+            quadtree->noeuds[i].m = (4 * quadtree->noeuds[trouverParent(i)].m 
+                    + quadtree->noeuds[trouverParent(i)].epsilon) 
+                    - (quadtree->noeuds[i-1].m + quadtree->noeuds[i - 2].m
+                    + quadtree->noeuds[i - 3].m);
+        }
+        else{
+            //lire m normalement
+        }
+
+        //lire epsilon
+
+        if(!quadtree->noeuds[i].epsilon){
+            //lire u
+            if(quadtree->noeuds[i].u){
+                quadtree->noeuds[i].affiche = 0;
+                //cree tout le sous arbre avec le meme m et epsilon a 0 et u a 1
+            }
+        }        
+    }
+
 }
 
 void afficheQuadtree(TabQuadtree tab){
