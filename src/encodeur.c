@@ -44,11 +44,13 @@ unsigned char** creeTabImage(char* nom, int* taille){
     fgetc(f);
     
     char ligne[100];
+    long positionDebutLigneValide;
     do {
+        positionDebutLigneValide = ftell(f);
         fgets(ligne, sizeof(ligne), f);
     } while (ligne[0] == '#');
 
-    fseek(f, -strlen(ligne), SEEK_CUR);
+    fseek(f, positionDebutLigneValide, SEEK_SET);
 
     fscanf(f, "%d ", taille);
 
@@ -56,18 +58,25 @@ unsigned char** creeTabImage(char* nom, int* taille){
 
     fscanf(f, "%d ", &maxValGris);
 
-    if(maxValGris == 255){
+    if(maxValGris != 255){
         fprintf(stderr, "erreur valeur max de gris doit être a 255\n");
         fclose(f);
         return NULL;
     }
 
     image = malloc(sizeof(unsigned char*) * (*taille));
+
+    if(image == NULL){
+        fprintf(stderr, "erreur allocation memoire\n");
+        fclose(f);
+        return NULL;
+    }
     
     for(int i = 0; i < (*taille); i++){
         image[i] = malloc(sizeof(unsigned char) * (*taille));
         
         if(image[i] == NULL){
+            fprintf(stderr, "erreur allocation memoire\n");
             for(int j = 0; j < i; j++){
                 free(image[j]);
             }
@@ -221,12 +230,12 @@ void remplirBit(BitStream* bit, TabQuadtree quadtree, int index, int profondeurM
 }
 
 /**
- * @brief initialise le bitstream
+ * @brief initialise le bitstream pour l'ecriture du qtc
  * 
  * @param tailleTotal 
  * @return BitStream 
  */
-BitStream initBitStream(int tailleTotal){
+BitStream initBitStreamEcriture(int tailleTotal){
     BitStream bit;
     bit.capa = 8;
     bit.index = 0;
@@ -265,7 +274,7 @@ void ecrireQTC(TabQuadtree tab, const char* nom, unsigned char profondeurs, int 
     
     nbDonnee(&nbm, &nbe, &nbu, tab, 0, profondeurs, 0);
     
-    BitStream bit = initBitStream(totalOctet(nbm, nbe, nbu));
+    BitStream bit = initBitStreamEcriture(totalOctet(nbm, nbe, nbu));
 
     if(bit.ptr == NULL){
         fprintf(stderr, "erreur malloc pas assez de memoire\n");
@@ -287,8 +296,9 @@ void ecrireQTC(TabQuadtree tab, const char* nom, unsigned char profondeurs, int 
                                                  infoTemp->tm_sec);
 
     fprintf(f, "# taux de compression : %f%%\n", ((float) (nbm * 8 + nbe * 2 + nbu) / (taille * taille * 8)) * 100 );
-    
-    fwrite(&profondeurs, sizeof(unsigned char), 1, f);
+
+    printf("profondeur ecrite : %d\n", profondeurs);
+    fprintf(f, "%c", profondeurs);
 
     remplirBit(&bit, tab, 0, profondeurs, 0);
 
@@ -306,10 +316,11 @@ void codage(char* nom){
     if(image == NULL)
         return;
     profondeurs = profondeur(taille);
+    printf("%d\n", profondeurs);
 
     tree = constructeurQuadtreePGM(taille, image, profondeurs);
     libererImage(image, taille);
 
     ecrireQTC(tree, ExtensionQTC(nom), profondeurs, taille);
-
+    libereQuadtree(&tree);
 }

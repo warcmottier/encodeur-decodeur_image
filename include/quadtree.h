@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "gereBit.h"
 
 typedef struct noeud{
     unsigned char m; //moyenne de ses quatre fils
@@ -30,10 +31,26 @@ typedef struct quadtree{
 TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int profondeur);
 
 /**
+ * @brief construit le quadtree en lisant le .qtc
+ * 
+ * @param profondeur 
+ * @param quadtree 
+ * @param f 
+ * @param bitStream 
+ */
+void constructeurQuadtreeQTC(int profondeur, TabQuadtree* quadtree, FILE* f, BitStream bitStream);
+
+/**
  * @brief affiche le quadtree
  * 
  * @param tab 
  */
 void afficheQuadtree(TabQuadtree tab);
+
+/**
+ * @brief vide le quadtree
+ * 
+ */
+void libereQuadtree(TabQuadtree* quadtree);
 
 #endif

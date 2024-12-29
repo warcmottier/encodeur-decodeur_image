@@ -11,6 +11,13 @@ void afficherBinaire8Bits(unsigned char n) {
     printf("\n");
 }
 
+/**
+ * @brief met les bit le plus a droite a l'emplacement de la capaciter de l'octet actuelle
+ * 
+ * @param src 
+ * @param capa 
+ * @return unsigned char 
+ */
 unsigned char moveRightmostBitToCapa(unsigned char src, unsigned char capa) {
 
     unsigned char rightmostBit = src & 1;
@@ -26,19 +33,32 @@ unsigned char moveRightmostBitToCapa(unsigned char src, unsigned char capa) {
     return result;
 }
 
-void ecrireBit(BitStream *bs, unsigned char bit) {
+void ecrireBit(BitStream *bitStream, unsigned char bit) {
 
     // si l'octet courant est plein on passe à l'octet suivant.
-    if (bs->capa == 0) {
-        bs->index++;
-        bs->capa = 8;
+    if (bitStream->capa == 0) {
+        bitStream->index++;
+        bitStream->capa = 8;
     }
 
-    unsigned char mask = moveRightmostBitToCapa(1, bs->capa);
+    unsigned char mask = moveRightmostBitToCapa(1, bitStream->capa);
     if (bit) {
-        bs->ptr[bs->index] |= mask;
+        bitStream->ptr[bitStream->index] |= mask;
     }
     
-    bs->capa--;
+    bitStream->capa--;
 }
 
+unsigned char lireBits(BitStream* bitStream, int n) {
+    unsigned char resultat = 0;
+    
+    for (int i = 0; i < n; i++) {
+
+        unsigned char bit = (bitStream->ptr[bitStream->index / 8] >> (7 - bitStream->index % 8)) & 1;
+        resultat = (resultat << 1) | bit;
+
+        bitStream->index++;
+    }
+    
+    return resultat;
+}

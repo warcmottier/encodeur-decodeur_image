@@ -33,6 +33,15 @@ void afficherBinaire8Bits(unsigned char n);
  * @param bs 
  * @param bit 
  */
-void ecrireBit(BitStream *bs, unsigned char bit);
+void ecrireBit(BitStream *bitStream, unsigned char bit);
+
+/**
+ * @brief lis le nombre de bit n voulue dans bs et renvoie ces dernier
+ * 
+ * @param bs 
+ * @param n 
+ * @return unsigned char 
+ */
+unsigned char lireBits(BitStream* bitStream, int n);
 
 #endif

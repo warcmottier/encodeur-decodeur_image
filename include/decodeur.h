@@ -11,6 +11,6 @@
  * 
  * @param nom 
  */
-void codage(char* nom);
+void decode(char* nom);
 
 #endif

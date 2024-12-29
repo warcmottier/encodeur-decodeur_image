@@ -12,8 +12,6 @@ TabQuadtree initQuadtree(int profondeur){
     tree.noeuds = malloc(sizeof(Noeud) * tree.tailleTable);
     if(tree.noeuds == NULL)
         return tree;
-    
-    
     for (int i = 0; i < tree.tailleTable; i++){
         tree.noeuds[i].epsilon = 0;
         tree.noeuds[i].u = 1;
@@ -60,9 +58,8 @@ void flagAffiche(TabQuadtree* quadtree, int index){
  * 
  */
 void rempliQuadtreePGM(int tailleImage, int x, int y, unsigned char** image, TabQuadtree *tabQuadtree, int index) {
-    // Cas de base : taille de l'image = 1
     if (tailleImage == 1) {
-        tabQuadtree->noeuds[index].m = image[y][x];  // On affecte la valeur à m
+        tabQuadtree->noeuds[index].m = image[y][x];
         return;
     }
 
@@ -112,7 +109,20 @@ int trouverParent(int index) {
     return (index - 1) / 4;
 }
 
-void constructeurQuadtreeQTC(int profondeur, TabQuadtree* quadtree, FILE* f){
+void remplirePixelUniforme(TabQuadtree* quadtree, unsigned char m, int index){
+    if(index >= quadtree->tailleTable)
+        return;
+    
+    quadtree->noeuds[index].m = m;
+    quadtree->noeuds[index].affiche = 0;
+    remplirePixelUniforme(quadtree, m, 4 * index + 1); //1er fils
+    remplirePixelUniforme(quadtree, m, 4 * index + 2); //2eme fils
+    remplirePixelUniforme(quadtree, m, 4 * index + 3); //3eme fils
+    remplirePixelUniforme(quadtree, m, 4 * index + 4); //4eme fils
+
+}
+
+void constructeurQuadtreeQTC(int profondeur, TabQuadtree* quadtree, FILE* f, BitStream bitStream){
     *quadtree = initQuadtree(profondeur + 1);
     int racine = 1, noeud4 = 0;
     for(int i = 0; i < quadtree->tailleTable; i++){
@@ -133,9 +143,11 @@ void constructeurQuadtreeQTC(int profondeur, TabQuadtree* quadtree, FILE* f){
                         + quadtree->noeuds[trouverParent(i)].epsilon) 
                         - (quadtree->noeuds[i-1].m + quadtree->noeuds[i - 2].m
                         + quadtree->noeuds[i - 3].m);
+                noeud4 = 0;
+                
             }
             else{
-            //lire uniquement les m des feuille
+                quadtree->noeuds[i].m = lireBits(&bitStream, 8);
             }
             continue;
         }
@@ -146,22 +158,25 @@ void constructeurQuadtreeQTC(int profondeur, TabQuadtree* quadtree, FILE* f){
                     + quadtree->noeuds[trouverParent(i)].epsilon) 
                     - (quadtree->noeuds[i-1].m + quadtree->noeuds[i - 2].m
                     + quadtree->noeuds[i - 3].m);
+            noeud4 = 0;
         }
         else{
-            //lire m normalement
+            quadtree->noeuds[i].m = lireBits(&bitStream, 8);
         }
 
-        //lire epsilon
+        quadtree->noeuds[i].epsilon = lireBits(&bitStream, 2);
 
         if(!quadtree->noeuds[i].epsilon){
-            //lire u
+            quadtree->noeuds[i].u = lireBits(&bitStream, 1);
             if(quadtree->noeuds[i].u){
                 quadtree->noeuds[i].affiche = 0;
                 //cree tout le sous arbre avec le meme m et epsilon a 0 et u a 1
+                remplirePixelUniforme(quadtree, quadtree->noeuds[i].m, i);
             }
-        }        
+        }
+        else
+            quadtree->noeuds[i].u = 0;
     }
-
 }
 
 void afficheQuadtree(TabQuadtree tab){
@@ -169,4 +184,8 @@ void afficheQuadtree(TabQuadtree tab){
         printf("(%d %d %d)", tab.noeuds[i].m, tab.noeuds[i].epsilon, tab.noeuds[i].u);
     }
     printf("\n");
+}
+
+void libereQuadtree(TabQuadtree* quadtree){
+    free(quadtree->noeuds);
 }
