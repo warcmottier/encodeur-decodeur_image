@@ -40,11 +40,10 @@ unsigned char** creeTabImage(char* nom, int* taille){
         fclose(f);
         return NULL;
     }
-
-    fgetc(f);
     
     char ligne[100];
     long positionDebutLigneValide;
+    fgets(ligne, sizeof(ligne), f);
     do {
         positionDebutLigneValide = ftell(f);
         fgets(ligne, sizeof(ligne), f);
@@ -183,6 +182,11 @@ void nbDonnee(int* nbm, int* nbe, int* nbu, TabQuadtree quadtree, int index, int
 
 }
 
+void estFeuille(int index, TabQuadtree quadtree){
+    if(4 * index + 1 >= quadtree.tailleTable)
+        printf("je suis une feuille\n");
+}   
+
 /**
  * @brief rempli le tableau de bit bit par bit pour pouvoir ecrire tout les octet d'un coup
  * 
@@ -193,40 +197,61 @@ void nbDonnee(int* nbm, int* nbe, int* nbu, TabQuadtree quadtree, int index, int
  * @param noeud4 
  */
 void remplirBit(BitStream* bit, TabQuadtree quadtree, int index, int profondeurMax, int noeud4) {
+    int racine = 1;
+    int noued4 = 0;
 
-    for(int i = 0; i < quadtree.tailleTable; i++){
+    // Vérification si quadtree.tailleTable est valide
+    if (quadtree.tailleTable <= 0 || quadtree.noeuds == NULL) {
+        return;  // Gestion d'erreur, retour si les données sont invalides
+    }
 
-        if(quadtree.noeuds[i].affiche == 0){
+    for (int i = 0; i < quadtree.tailleTable; i++) {
+
+        // Si le noeud actuel ne doit pas être affiché, on passe au suivant
+        if (quadtree.noeuds[i].affiche == 0) {
             continue;
         }
 
-        if (4 * i + 1 >= quadtree.tailleTable && i % 4 != 0){
-            for(int j = 7; j >= 0; j--){
+        // Si ce n'est pas la première racine, on augmente le compteur de noeuds de type 4
+        if (!racine) {
+            noued4++;
+        } else {
+            racine = 0;  // On définit "racine" à 0 après le premier tour
+        }
+
+        // Si on a dépassé la taille du tableau ou si le noeud4 n'est pas encore à 4, on écrit l'octet
+        if (4 * i + 1 >= quadtree.tailleTable && noeud4 != 4) {
+            for (int j = 7; j >= 0; j--) {
                 ecrireBit(bit, (quadtree.noeuds[i].m >> j) & 1);
             }
+            noued4 = 0;  // Réinitialisation du compteur de noeuds 4
             continue;
         }
 
-        if(4 * i + 1 >= quadtree.tailleTable && i % 4 == 0){
-            
+        // Si le noeud4 est égal à 4, on le saute sans rien faire
+        if (4 * i + 1 >= quadtree.tailleTable && noued4 == 4) {
             continue;
         }
+
+        // Si le compteur de noeuds 4 est différent de 4, on écrit l'octet
+        if (noued4 != 4) {
+            for (int j = 7; j >= 0; j--) {
+                ecrireBit(bit, (quadtree.noeuds[i].m >> j) & 1);
+            }
+            noued4 = 0;  // Réinitialisation du compteur de noeuds 4
+        }
+
         
-        if(i == 0 || i % 4 != 0){
-            for(int j = 7; j >= 0; j--){
-                ecrireBit(bit, (quadtree.noeuds[i].m >> j) & 1);
-            }
-        }
-
+        // Écriture des bits de l'epsilon
         for (int j = 1; j >= 0; j--) {
             ecrireBit(bit, (quadtree.noeuds[i].epsilon >> j) & 1);
         }
 
-        if(quadtree.noeuds[i].epsilon == 0){
+        // Si epsilon est égal à 0, on écrit la valeur de u
+        if (quadtree.noeuds[i].epsilon == 0) {
             ecrireBit(bit, quadtree.noeuds[i].u);
         }
     }
-
 }
 
 /**
@@ -255,7 +280,6 @@ int totalOctet(int nbm, int nbe, int nbu){
 /**
  * @brief cree et ecrit le qtc
  * parcourir l'arbre pour recup le nombre de e u et m a ecrire 
- * pour calculer le taux de compression (taille * taille * 8) / (e * 3 + u * 1 + m * 8) * 100
  * 
  * @param tab 
  * @param nom 
@@ -273,14 +297,18 @@ void ecrireQTC(TabQuadtree tab, const char* nom, unsigned char profondeurs, int 
 
     
     nbDonnee(&nbm, &nbe, &nbu, tab, 0, profondeurs, 0);
+
+    printf("%d %d %d\n", nbm, nbe, nbu);
     
     BitStream bit = initBitStreamEcriture(totalOctet(nbm, nbe, nbu));
+    printf("%d\n", bit.tailleTotal);
 
     if(bit.ptr == NULL){
         fprintf(stderr, "erreur malloc pas assez de memoire\n");
         fclose(f);
         return;
     }
+    
 
     fprintf(f, "Q1\n");
 
@@ -295,12 +323,13 @@ void ecrireQTC(TabQuadtree tab, const char* nom, unsigned char profondeurs, int 
                                                  infoTemp->tm_min,
                                                  infoTemp->tm_sec);
 
-    fprintf(f, "# taux de compression : %f%%\n", ((float) (nbm * 8 + nbe * 2 + nbu) / (taille * taille * 8)) * 100 );
+    fprintf(f, "# taux de compression : %.2f%%\n", ((float) (nbm * 8 + nbe * 2 + nbu) / (taille * taille * 8)) * 100 );
 
     printf("profondeur ecrite : %d\n", profondeurs);
     fprintf(f, "%c", profondeurs);
 
     remplirBit(&bit, tab, 0, profondeurs, 0);
+    
 
     fwrite(bit.ptr, sizeof(unsigned char), bit.tailleTotal, f);
 
@@ -318,7 +347,7 @@ void codage(char* nom){
     profondeurs = profondeur(taille);
     printf("%d\n", profondeurs);
 
-    tree = constructeurQuadtreePGM(taille, image, profondeurs);
+    tree = constructeurQuadtreePGM(taille, image, profondeurs, 1);
     libererImage(image, taille);
 
     ecrireQTC(tree, ExtensionQTC(nom), profondeurs, taille);

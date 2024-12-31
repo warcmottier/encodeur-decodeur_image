@@ -1,10 +1,9 @@
 
 #include "../include/option.h"
-#include "../include/decodeur.h"
-#include "../include/encodeur.h"
+#include "../include/lib.h"
 int main(){
-    codage("testPGM/buzz.512.pgm");
-    //decode("testPGM/buzz.512.qtc");
+    codage("testPGM/ville.2048.pgm");
+    //decode("testPGM/ville.2048.qtc");
 
     return 0;
 }
