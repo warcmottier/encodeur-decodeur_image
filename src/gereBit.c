@@ -3,9 +3,7 @@
 
 void afficherBinaire8Bits(unsigned char n) {
     for (int i = 7; i >= 0; i--) {
-        // Extraire chaque bit en partant du plus significatif
         unsigned char bit = (n >> i) & 1;
-        // Afficher le bit
         printf("%d", bit);
     }
     printf("\n");

@@ -7,31 +7,20 @@
  * @return Quadtree 
  */
 TabQuadtree initQuadtree(int profondeur){
-    TabQuadtree tree;
-    tree.tailleTable = (((int) pow(4, profondeur)) - 1) / 3;
-    tree.noeuds = malloc(sizeof(Noeud) * tree.tailleTable);
-    if(tree.noeuds == NULL)
-        return tree;
-    for (int i = 0; i < tree.tailleTable; i++){
-        tree.noeuds[i].epsilon = 0;
-        tree.noeuds[i].u = 1;
-        tree.noeuds[i].m = 0;
-        tree.noeuds[i].affiche = 1;
-        tree.noeuds[i].v = 0;
-        tree.profondeurMax = profondeur;
+    TabQuadtree quadtree;
+    quadtree.tailleTable = (((int) pow(4, profondeur)) - 1) / 3;
+    quadtree.noeuds = malloc(sizeof(Noeud) * quadtree.tailleTable);
+    if(quadtree.noeuds == NULL)
+        return quadtree;
+    for (int i = 0; i < quadtree.tailleTable; i++){
+        quadtree.noeuds[i].epsilon = 0;
+        quadtree.noeuds[i].u = 1;
+        quadtree.noeuds[i].m = 0;
+        quadtree.noeuds[i].affiche = 1;
+        quadtree.profondeurMax = profondeur;
     }
     
-    return tree;
-}
-
-/**
- * @brief cree un noeud deja allouer a l'initialisation
- * 
- * @param tabQuadtree 
- * @return Quadtree 
- */
-Noeud creeNoeud(TabQuadtree tabQuadtree){
-    return tabQuadtree.noeuds[tabQuadtree.tailleTable];
+    return quadtree;
 }
 
 void flagAffiche(TabQuadtree* quadtree, int index){
@@ -58,160 +47,46 @@ void flagAffiche(TabQuadtree* quadtree, int index){
  * @param tree 
  * 
  */
-void rempliQuadtreePGM(int tailleImage, int x, int y, unsigned char** image, TabQuadtree *tabQuadtree, int index) {
+void rempliQuadtreePGM(int tailleImage, int x, int y, unsigned char** image, TabQuadtree *quadtree, int index) {
+    //on est sur une feuille
     if (tailleImage == 1) {
-        tabQuadtree->noeuds[index].m = image[y][x];
+        quadtree->noeuds[index].m = image[y][x];
         return;
     }
 
     int moitierTaille = tailleImage / 2;
 
-    rempliQuadtreePGM(moitierTaille, x, y, image, tabQuadtree, 4 * index + 1); // enfant haut gauche
-    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y, image, tabQuadtree, 4 * index + 2); // enfant haut droit
-    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y + moitierTaille, image, tabQuadtree, 4 * index + 3); // enfant bas droit
-    rempliQuadtreePGM(moitierTaille, x, y + moitierTaille, image, tabQuadtree, 4 * index + 4); // enfant bas gauche
 
-    tabQuadtree->noeuds[index].m = (tabQuadtree->noeuds[4 * index + 1].m + 
-                                    tabQuadtree->noeuds[4 * index + 2].m + 
-                                    tabQuadtree->noeuds[4 * index + 3].m + 
-                                    tabQuadtree->noeuds[4 * index + 4].m) / 4;
-    
-    double variance = 0.0;
-    for(int i = 0; i < 4; i++){
-        variance += pow(tabQuadtree->noeuds[4 * index + i + 1].v, 2) + pow(tabQuadtree->noeuds[index].m - tabQuadtree->noeuds[4 * index + i + 1].m, 2);
-    }
-    tabQuadtree->noeuds[index].v = sqrt(variance / 7);
+    rempliQuadtreePGM(moitierTaille, x, y, image, quadtree, 4 * index + 1); // enfant haut gauche
+    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y, image, quadtree, 4 * index + 2); // enfant haut droit
+    rempliQuadtreePGM(moitierTaille, x + moitierTaille, y + moitierTaille, image, quadtree, 4 * index + 3); // enfant bas droit
+    rempliQuadtreePGM(moitierTaille, x, y + moitierTaille, image, quadtree, 4 * index + 4); // enfant bas gauche
 
-    tabQuadtree->noeuds[index].epsilon = (tabQuadtree->noeuds[4 * index + 1].m + tabQuadtree->noeuds[4 * index + 2].m +
-                                          tabQuadtree->noeuds[4 * index + 3].m + tabQuadtree->noeuds[4 * index + 4].m) % 4; 
+    quadtree->noeuds[index].m = (quadtree->noeuds[4 * index + 1].m + 
+                                    quadtree->noeuds[4 * index + 2].m + 
+                                    quadtree->noeuds[4 * index + 3].m + 
+                                    quadtree->noeuds[4 * index + 4].m) / 4;
 
-    if(tabQuadtree->noeuds[index].epsilon != 0 
-        || tabQuadtree->noeuds[4 * index + 1].u == 0 || tabQuadtree->noeuds[4 * index + 2].u == 0 || tabQuadtree->noeuds[4 * index + 3].u == 0 
-        || tabQuadtree->noeuds[4 * index + 4].u == 0 
-        || tabQuadtree->noeuds[4 * index + 1].m != tabQuadtree->noeuds[4 * index + 2].m || tabQuadtree->noeuds[ 4 * index + 1].m != tabQuadtree->noeuds[ 4 * index + 3].m 
-        || tabQuadtree->noeuds[ 4 * index + 1].m != tabQuadtree->noeuds[ 4 * index + 4].m){
-            tabQuadtree->noeuds[index].u = 0;
+    quadtree->noeuds[index].epsilon = (quadtree->noeuds[4 * index + 1].m + quadtree->noeuds[4 * index + 2].m +
+                                          quadtree->noeuds[4 * index + 3].m + quadtree->noeuds[4 * index + 4].m) % 4; 
+
+    if(quadtree->noeuds[index].epsilon != 0 
+        || quadtree->noeuds[4 * index + 1].u == 0 || quadtree->noeuds[4 * index + 2].u == 0 || quadtree->noeuds[4 * index + 3].u == 0 
+        || quadtree->noeuds[4 * index + 4].u == 0 
+        || quadtree->noeuds[4 * index + 1].m != quadtree->noeuds[4 * index + 2].m || quadtree->noeuds[ 4 * index + 1].m != quadtree->noeuds[ 4 * index + 3].m 
+        || quadtree->noeuds[ 4 * index + 1].m != quadtree->noeuds[ 4 * index + 4].m){
+            quadtree->noeuds[index].u = 0;
     }
     else{
-        flagAffiche(tabQuadtree, index);
-        tabQuadtree->noeuds[index].affiche = 1;
-    }
-        
-}
-
-/**
- * @brief Fonction récursive de filtrage du quadtree.
- * 
- * @param quadtree : La structure du quadtree.
- * @param index : L'indice du noeud courant à filtrer.
- * @param sigma : Le seuil calculé à partir de la variance moyenne/maximale.
- * @param alpha : Facteur pour ajuster le seuil au fil de la descente dans l'arbre.
- * @return 1 si le noeud a été uniformisé, 0 sinon.
- */
-int filtrage(TabQuadtree* quadtree, double sigma, double alpha, int index) {
-    if (quadtree->noeuds[index].u == 1) {
-        return 1;
-    }
-
-    if (4 * index + 1 >= quadtree->tailleTable) {
-        return 1;
-    }
-
-    int s = 0;
-    s += filtrage(quadtree, sigma * alpha, alpha, 4 * index + 1); // 1er fils
-    s += filtrage(quadtree, sigma * alpha, alpha, 4 * index + 2); // 2ème fils
-    s += filtrage(quadtree, sigma * alpha, alpha, 4 * index + 3); // 3ème fils
-    s += filtrage(quadtree, sigma * alpha, alpha, 4 * index + 4); // 4ème fils
-
-    if (s < 4 || quadtree->noeuds[index].v > sigma) {
-        return 0;
-    }
-
-    quadtree->noeuds[index].epsilon = 0;
-    quadtree->noeuds[index].u = 1; 
-
-    return 1;
-}
-
-/**
- * @brief Calcule les variances moyenne et maximale pour tous les nœuds du quadtree.
- * 
- * @param quadtree : Le quadtree sur lequel calculer les variances.
- * @param medvar : La variance moyenne.
- * @param maxvar : La variance maximale.
- */
-void calculerVariances(TabQuadtree* quadtree, double* medvar, double* maxvar) {
-    double sum_var = 0;
-    *maxvar = 0;
-    int count = 0;
-    for (int i = 0; i < quadtree->tailleTable; i++) {
-
-        if (quadtree->noeuds[i].v  > *maxvar) {
-            *maxvar = quadtree->noeuds[i].v;
-        }
-        sum_var += quadtree->noeuds[i].v ;
-        count++;
-    }
-
-    *medvar = sum_var / count;
-}
-
-/**
- * @brief Fonction de filtrage pour tout le quadtree, partant de la racine.
- * 
- * @param quadtree : Le quadtree à filtrer.
- * @param alpha : Facteur d'ajustement du seuil.
- */
-void filtrerQuadtree(TabQuadtree* quadtree, double alpha) {
-    double medvar, maxvar;
-    calculerVariances(quadtree, &medvar, &maxvar);
-    printf("max %2f med %2f\n", maxvar, medvar);
-
-    double sigma = (maxvar == 0) ? 1.0 : medvar / maxvar;
-
-    filtrage(quadtree, sigma, alpha, 0);
-
-    /*for(int i = 0; i < quadtree->tailleTable; i++){
-        printf("%d %d\n", quadtree->noeuds[i].epsilon, quadtree->noeuds[i].u);   
-    }*/
-}
-
-void afficher(TabQuadtree* quadtree){
-    
-    for(int i = 0; i < quadtree->tailleTable; i++){
-        
-        //printf("%d\n", quadtree->noeuds[i].affiche);
-        if(!quadtree->noeuds[i].affiche){
-            continue;
-        }
-
-        if(!quadtree->noeuds[i].epsilon && quadtree->noeuds[i].u){
-            
-            flagAffiche(quadtree, i);
-            quadtree->noeuds[i].affiche = 1;
-        }
+        flagAffiche(quadtree, index);
+        quadtree->noeuds[index].affiche = 1;
     }
 }
 
-/**
- * @brief Fonction qui construit un quadtree pour une image donnée avec les paramètres de compression avec pertes.
- * 
- * @param tailleImage : La taille de l'image (en pixels).
- * @param image : L'image sous forme de tableau 2D.
- * @param profondeur : La profondeur du quadtree.
- * @param alpha : Facteur d'ajustement du seuil de filtrage.
- * @return TabQuadtree : Le quadtree résultant après filtrage.
- */
-TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int profondeur, double alpha) {
-    TabQuadtree tree = initQuadtree(profondeur + 1);
-
-    rempliQuadtreePGM(tailleImage, 0, 0, image, &tree, 0);
-    
-    //filtrerQuadtree(&tree, alpha);
-    
-    //afficher(&tree);
-
-    return tree;
+TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int profondeur){
+    TabQuadtree quadtree = initQuadtree(profondeur + 1);
+    rempliQuadtreePGM(tailleImage, 0, 0, image, &quadtree, 0);
+    return quadtree;
 }
 
 /**
@@ -221,12 +96,15 @@ TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int 
  * @return int 
  */
 int trouverParent(int index) {
-    if (index <= 0) {
-        return -1;
-    }
     return (index - 1) / 4;
 }
 
+/**
+ * @brief met affiche a 0 pour tout le sous arbre du noued d'index index afin de remplire leur bonne valeur m dans le quadtree 
+ * @param quadtree 
+ * @param m 
+ * @param index 
+ */
 void remplirePixelUniforme(TabQuadtree* quadtree, unsigned char m, int index){
     if(index >= quadtree->tailleTable)
         return;
@@ -297,9 +175,67 @@ void constructeurQuadtreeQTC(int profondeur, TabQuadtree* quadtree, FILE* f, Bit
     }
 }
 
-void afficheQuadtree(TabQuadtree tab){
-    for(int i = 0; i < tab.tailleTable; i++){
-        printf("(%d %d %d)", tab.noeuds[i].m, tab.noeuds[i].epsilon, tab.noeuds[i].u);
+/**
+ * @brief rempli la grille
+ * 
+ * @param quadtree 
+ * @param grille 
+ * @param index 
+ * @param uniforme 
+ * @param taille 
+ * @param x 
+ * @param y 
+ */
+void quadtreeToGrille(TabQuadtree quadtree, int** grille, int index, int taille, int x, int y) {
+    
+    if (taille == 1) {
+        grille[y][x] = quadtree.noeuds[trouverParent(index)].u ? 255 : 0;
+        return;
+    }
+
+    int moitierTaille = taille / 2;
+
+    quadtreeToGrille(quadtree, grille, 4 * index + 1, moitierTaille, x, y);
+    quadtreeToGrille(quadtree, grille, 4 * index + 2, moitierTaille, x + moitierTaille, y);
+    quadtreeToGrille(quadtree, grille, 4 * index + 3, moitierTaille, x + moitierTaille, y + moitierTaille);
+    quadtreeToGrille(quadtree, grille, 4 * index + 4, moitierTaille, x, y + moitierTaille);
+}
+
+
+int** creeGrille(TabQuadtree quadtree, int taille){
+    int** grille;
+
+    
+    grille = malloc(sizeof(int*) * taille);
+
+    if(grille == NULL){
+        fprintf(stderr, "erreur allocation memoire\n");
+        return NULL;
+    }
+    
+    for(int i = 0; i < (taille); i++){
+        grille[i] = malloc(sizeof(int) * taille);
+        
+        if(grille[i] == NULL){
+            fprintf(stderr, "erreur allocation memoire\n");
+            for(int j = 0; j < i; j++){
+                free(grille[j]);
+            }
+
+            free(grille);
+            return NULL;
+        }
+    }
+
+    quadtreeToGrille(quadtree, grille, 0, taille, 0, 0);
+    
+
+    return grille;
+}
+
+void afficheQuadtree(TabQuadtree quadtree){
+    for(int i = 0; i < quadtree.tailleTable; i++){
+        printf("(%d %d %d)", quadtree.noeuds[i].m, quadtree.noeuds[i].epsilon, quadtree.noeuds[i].u);
     }
     printf("\n");
 }

@@ -1,31 +1,48 @@
-CC = gcc
-CFLAGS =-std=c17 -pedantic -Wall
-LDFLAGS = -lm
-OBJ = option.o encodeur.o decodeur.o main.o quadtree.o gereBit.o
-EXE = codec
-SOURCE = src/
-INCLUDE = include/
+CC := gcc
+STD := -std=c17
+SRC := src/
+LIB := lib/
+TEST := test_unitaire/
+BIN := bin/
 
-$(EXE): $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
-	
-main.o: $(SOURCE)main.c $(INCLUDE)option.h
+PFLAGS := -I$(LIB)include
+CFLAGS := -Wall -O2
+LFLAGS := -lm -Wl,-rpath,$(LIB) -L$(LIB) -lmtrack
+INCLUDE := -include $(LIB)include/mtrack.h
 
-option.o: $(SOURCE)option.c $(INCLUDE)option.h $(INCLUDE)lib.h
+all: $(BIN) libmtrack.so test1 test2 test3 test4 test5 test6 test7
 
-encodeur.o: $(SOURCE)encodeur.c $(INCLUDE)encodeur.h $(INCLUDE)quadtree.h $(INCLUDE)gereBit.h
+$(BIN):
+	mkdir -p $(BIN)
 
-decodeur.o : $(SOURCE)decodeur.c $(INCLUDE)decodeur.h $(INCLUDE)quadtree.h $(INCLUDE)gereBit.h
+libmtrack.so:
+	make -f makelib
 
-quadtree.o: $(SOURCE)quadtree.c $(INCLUDE)quadtree.h
+test1:
+	$(CC) $(STD) $(TEST)test1.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test1
 
-gereBit.o: $(SOURCE)gereBit.c $(INCLUDE)gereBit.h
+test2:
+	$(CC) $(STD) $(TEST)test2.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test2
 
-%.o: $(SOURCE)%.c
-	$(CC) -c $< $(CFLAGS)
+test3:
+	$(CC) $(STD) $(TEST)test3.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test3
 
-clean:
-	rm -f *.o
+test4:
+	$(CC) $(STD) $(TEST)test4.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test4
 
-mrproper: clean
-	rm -f $(EXE)
+test5:
+	$(CC) $(STD) $(TEST)test5.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test5
+
+test6:
+	$(CC) $(STD) $(TEST)test6.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test6
+
+test7:
+	$(CC) $(STD) $(TEST)test7.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test7
+
+make clean:
+	rm -f $(BIN)test1 $(BIN)test2 $(BIN)test3 $(BIN)test4 $(BIN)test5 $(BIN)test6 $(BIN)test7
+	rm -r $(BIN)
+
+make mrproper: clean
+	make -f makelib clean
+
