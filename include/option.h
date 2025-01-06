@@ -1,37 +1,43 @@
 #ifndef _OPTION_
 #define _OPTION_
 
-typedef struct option{
+#include "../include/lib.h"
+
+
+typedef struct {
     int c; // flag encodeur
     int u; // flag decodeur
     char* nomEntrer; // nom du fichier d'entrer
     char* nomSortie; // nom du fichier cree doit valoir {QTC|PGM}/out.{qtc|pgm} par defaut
     int g; // affichier la grille 1 si oui 0 sinon
     int v; // mode verbeux
+    int o; // si il y a eu un renomage
+    int flag_okay; // flag toute les option sont bonne
 }Option;
 
-
 /**
- * @brief initialise les option
+ * @brief initialise option
  * 
  * @return Option 
  */
 Option init_Option();
 
 /**
- * @brief remplie les option
+ * @brief choisi les option 
+ * 
+ * @param opt 
+ * @param argc 
+ * @param argv 
+ */
+void choixOption(Option* opt, int argc, char* argv[]);
+
+/**
+ * @brief Lance les algos selon les options rentrées
  * 
  * @param option 
  * @param argc 
  * @param argv 
  */
-void choixOption(Option* option, int argc, char*argv[]);
-
-/**
- * @brief lance les algo selon les option
- * 
- * @param option 
- */
-void lanceAlgo(Option option);
+void lanceAlgo(Option opt);
 
 #endif

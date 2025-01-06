@@ -1,48 +1,35 @@
 CC := gcc
-STD := -std=c17
-SRC := src/
-LIB := lib/
-TEST := test_unitaire/
+CFLAGS := -std=c17 -pedantic -Wall
+LDFLAGS := -lm
 BIN := bin/
+SOURCE := src/
+INCLUDE := include/
+OBJ := $(BIN)option.o $(BIN)encodeur.o $(BIN)decodeur.o $(BIN)main.o $(BIN)quadtree.o $(BIN)gereBit.o
+EXE := $(BIN)codec
 
-PFLAGS := -I$(LIB)include
-CFLAGS := -Wall -O2
-LFLAGS := -lm -Wl,-rpath,$(LIB) -L$(LIB) -lmtrack
-INCLUDE := -include $(LIB)include/mtrack.h
+$(EXE): $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
-all: $(BIN) libmtrack.so test1 test2 test3 test4 test5 test6 test7
+$(BIN)main.o: $(SOURCE)main.c $(INCLUDE)option.h
+	$(CC) -c $< -o $@ $(CFLAGS)
 
-$(BIN):
-	mkdir -p $(BIN)
+$(BIN)option.o: $(SOURCE)option.c $(INCLUDE)option.h $(INCLUDE)lib.h
+	$(CC) -c $< -o $@ $(CFLAGS)
 
-libmtrack.so:
-	make -f makelib
+$(BIN)encodeur.o: $(SOURCE)encodeur.c $(INCLUDE)encodeur.h $(INCLUDE)quadtree.h $(INCLUDE)gereBit.h
+	$(CC) -c $< -o $@ $(CFLAGS)
 
-test1:
-	$(CC) $(STD) $(TEST)test1.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test1
+$(BIN)decodeur.o: $(SOURCE)decodeur.c $(INCLUDE)decodeur.h $(INCLUDE)quadtree.h $(INCLUDE)gereBit.h
+	$(CC) -c $< -o $@ $(CFLAGS)
 
-test2:
-	$(CC) $(STD) $(TEST)test2.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test2
+$(BIN)quadtree.o: $(SOURCE)quadtree.c $(INCLUDE)quadtree.h $(INCLUDE)gereBit.h
+	$(CC) -c $< -o $@ $(CFLAGS)
 
-test3:
-	$(CC) $(STD) $(TEST)test3.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test3
+$(BIN)gereBit.o: $(SOURCE)gereBit.c $(INCLUDE)gereBit.h
+	$(CC) -c $< -o $@ $(CFLAGS)
 
-test4:
-	$(CC) $(STD) $(TEST)test4.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test4
+clean:
+	rm -f $(BIN)*.o
 
-test5:
-	$(CC) $(STD) $(TEST)test5.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test5
-
-test6:
-	$(CC) $(STD) $(TEST)test6.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test6
-
-test7:
-	$(CC) $(STD) $(TEST)test7.c $(LFLAGS) $(PFLAGS) $(CFLAGS) $(INCLUDE) -o $(BIN)test7
-
-make clean:
-	rm -f $(BIN)test1 $(BIN)test2 $(BIN)test3 $(BIN)test4 $(BIN)test5 $(BIN)test6 $(BIN)test7
-	rm -r $(BIN)
-
-make mrproper: clean
-	make -f makelib clean
-
+mrproper: clean
+	rm -f $(EXE)
