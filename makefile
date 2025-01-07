@@ -1,35 +1,36 @@
 CC := gcc
-CFLAGS := -std=c17 -pedantic -Wall
-LDFLAGS := -lm
 BIN := bin/
 SOURCE := src/
 INCLUDE := include/
-OBJ := $(BIN)option.o $(BIN)encodeur.o $(BIN)decodeur.o $(BIN)main.o $(BIN)quadtree.o $(BIN)gereBit.o
+LIB := lib/
+OBJ := $(BIN)option.o $(BIN)main.o
 EXE := $(BIN)codec
+CFLAGS := -std=c17 -pedantic -Wall
+PFLAGS := -I$(LIB)$(INCLUDE)
+LFLAGS := -Wl,-rpath,$(LIB) -L$(LIB) -lcodec -lm
 
-$(EXE): $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+all : $(BIN) libcodec codec clean
+
+$(BIN):
+	mkdir -p $(BIN)
+
+libcodec:
+	make -f makelib
+
+codec: $(OBJ)
+	$(CC) -o $(EXE) $^ $(LFLAGS)
 
 $(BIN)main.o: $(SOURCE)main.c $(INCLUDE)option.h
-	$(CC) -c $< -o $@ $(CFLAGS)
+	$(CC) -c $< $(CFLAGS) $(PFLAGS) -o $@
 
-$(BIN)option.o: $(SOURCE)option.c $(INCLUDE)option.h $(INCLUDE)lib.h
-	$(CC) -c $< -o $@ $(CFLAGS)
-
-$(BIN)encodeur.o: $(SOURCE)encodeur.c $(INCLUDE)encodeur.h $(INCLUDE)quadtree.h $(INCLUDE)gereBit.h
-	$(CC) -c $< -o $@ $(CFLAGS)
-
-$(BIN)decodeur.o: $(SOURCE)decodeur.c $(INCLUDE)decodeur.h $(INCLUDE)quadtree.h $(INCLUDE)gereBit.h
-	$(CC) -c $< -o $@ $(CFLAGS)
-
-$(BIN)quadtree.o: $(SOURCE)quadtree.c $(INCLUDE)quadtree.h $(INCLUDE)gereBit.h
-	$(CC) -c $< -o $@ $(CFLAGS)
-
-$(BIN)gereBit.o: $(SOURCE)gereBit.c $(INCLUDE)gereBit.h
-	$(CC) -c $< -o $@ $(CFLAGS)
+$(BIN)option.o: $(SOURCE)option.c $(INCLUDE)option.h $(LIB)$(INCLUDE)codec.h
+	$(CC) -c $< $(CFLAGS) $(PFLAGS) -o $@
 
 clean:
 	rm -f $(BIN)*.o
 
 mrproper: clean
 	rm -f $(EXE)
+
+cleanlib :
+	make -f makelib mrproper

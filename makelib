@@ -1,0 +1,33 @@
+CC := gcc
+BIN := bin/
+LIB := lib/
+SRC := $(LIB)src/
+INC := $(LIB)include/
+OBJ := $(BIN)encodeur.o $(BIN)decodeur.o $(BIN)quadtree.o $(BIN)gereBit.o
+CFLAGS := -std=c17 -pedantic -Wall -fPIC -I$(INC)
+LFLAGS := -shared
+LDFLAGS := -lm
+
+
+all: lib clean
+
+lib: $(OBJ)
+	$(CC) $(LFLAGS) $^ -o $(LIB)libcodec.so
+
+$(BIN)encodeur.o: $(SRC)encodeur.c $(INC)encodeur.h $(INC)quadtree.h $(INC)gereBit.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+$(BIN)decodeur.o: $(SRC)decodeur.c $(INC)decodeur.h $(INC)quadtree.h $(INC)gereBit.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+$(BIN)quadtree.o: $(SRC)quadtree.c $(INC)quadtree.h $(INC)gereBit.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+$(BIN)gereBit.o: $(SRC)gereBit.c $(INC)gereBit.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+clean:
+	rm -f $(BIN)*.o
+
+mrproper:
+	rm -f $(LIB)libcodec.so
