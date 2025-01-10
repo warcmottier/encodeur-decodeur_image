@@ -142,6 +142,11 @@ void nbDonnee(int* nbm, int* nbe, int* nbu, TabQuadtree quadtree, int index, int
         return;
     }
 
+    if(quadtree.noeuds[trouverParent(index)].u == 1){
+        profondeurActu--;
+        return;
+    }
+
     if(noeud4 != 1)
         (*nbm)++;
 
@@ -186,7 +191,7 @@ void remplirBit(BitStream* bit, TabQuadtree quadtree, int index, int profondeurM
 
     for(int i = 0; i < quadtree.tailleTable; i++){
 
-        if(quadtree.noeuds[i].affiche == 0){
+        if(quadtree.noeuds[trouverParent(index)].u == 1){
             continue;
         }
 
@@ -275,7 +280,7 @@ void ecrireQTC(TabQuadtree quadtree, const char* nom, unsigned char profondeurs,
     }
     
     nbDonnee(&nbm, &nbe, &nbu, quadtree, 0, profondeurs, 0);
-    
+
     BitStream bit = initBitStreamEcriture(totalOctet(nbm, nbe, nbu));
 
     if(bit.ptr == NULL){
@@ -369,7 +374,7 @@ void libereGrillePGM(int** grille, int taille){
     free(grille);
 }
 
-void codage(char* nomEntrer, char* nomSortie, int grille, int verbeux){
+void codage(char* nomEntrer, char* nomSortie, int grille, int verbeux, double alpha){
     int taille, profondeurs;
     unsigned char** image;
     TabQuadtree quadtree;
@@ -379,7 +384,7 @@ void codage(char* nomEntrer, char* nomSortie, int grille, int verbeux){
         return;
     profondeurs = profondeur(taille);
 
-    quadtree = constructeurQuadtreePGM(taille, image, profondeurs);
+    quadtree = constructeurQuadtreePGM(taille, image, profondeurs, alpha);
     
     if(verbeux){
         fprintf(stderr, "quadtree charger\n");

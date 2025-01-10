@@ -17,6 +17,7 @@ TabQuadtree initQuadtree(int profondeur){
         quadtree.noeuds[i].u = 1;
         quadtree.noeuds[i].m = 0;
         quadtree.noeuds[i].affiche = 1;
+        quadtree.noeuds[i].v = 0;
         quadtree.profondeurMax = profondeur;
     }
     
@@ -70,6 +71,14 @@ void rempliQuadtreePGM(int tailleImage, int x, int y, unsigned char** image, Tab
     quadtree->noeuds[index].epsilon = (quadtree->noeuds[4 * index + 1].m + quadtree->noeuds[4 * index + 2].m +
                                           quadtree->noeuds[4 * index + 3].m + quadtree->noeuds[4 * index + 4].m) % 4; 
 
+    double mu = 0.0;
+
+    for(int i = 1; i < 5; i++){
+        mu += pow(quadtree->noeuds[index].m - quadtree->noeuds[4 * index + i].m, 2) + pow(quadtree->noeuds[4 * index + i].v, 2);
+    }
+
+    quadtree->noeuds[index].v = sqrt(mu) / 4;
+
     if(quadtree->noeuds[index].epsilon != 0 
         || quadtree->noeuds[4 * index + 1].u == 0 || quadtree->noeuds[4 * index + 2].u == 0 || quadtree->noeuds[4 * index + 3].u == 0 
         || quadtree->noeuds[4 * index + 4].u == 0 
@@ -83,18 +92,79 @@ void rempliQuadtreePGM(int tailleImage, int x, int y, unsigned char** image, Tab
     }
 }
 
-TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int profondeur){
-    TabQuadtree quadtree = initQuadtree(profondeur + 1);
-    rempliQuadtreePGM(tailleImage, 0, 0, image, &quadtree, 0);
-    return quadtree;
-}
-
 /**
- * @brief trouve le parent d'un fils
+ * @brief filtre le quadtree
  * 
+ * @param quadtree 
+ * @param omega 
+ * @param alpha 
  * @param index 
  * @return int 
  */
+int filtrage(TabQuadtree* quadtree, double omega, double alpha, int index){
+    
+    if(quadtree->noeuds[index].u == 1)
+        return 1;
+    
+    if(4 * index + 1 >= quadtree->tailleTable)
+        return 1;
+    
+    int s = 0;
+    s += filtrage(quadtree, omega * alpha, alpha, 4 * index + 1); // 1er fils
+    s += filtrage(quadtree, omega * alpha, alpha, 4 * index + 2); // 2eme fils
+    s += filtrage(quadtree, omega * alpha, alpha, 4 * index + 3); // 3eme fils
+    s += filtrage(quadtree, omega * alpha, alpha, 4 * index + 4); // 4eme fils
+
+    if(s < 4 || quadtree->noeuds[index].v > omega)
+        return 0;
+
+    quadtree->noeuds[index].epsilon = 0;
+    quadtree->noeuds[index].u = 1;
+    return 1; 
+}
+
+/**
+ * @brief calcule medvar et maxvar
+ * 
+ * @param quadtree 
+ * @param maxvar 
+ * @param medvar 
+ */
+void calculvar(TabQuadtree* quadtree, double* maxvar, double* medvar){
+    int cmpt = 0;
+    double somme = 0.0;
+    for(int i = 0; i < quadtree->tailleTable; i++){
+        if(4 * i + 1 < quadtree->tailleTable){
+            somme += quadtree->noeuds[i].v;
+            cmpt++;
+        }
+
+        if(*maxvar < quadtree->noeuds[i].v)
+            *maxvar = quadtree->noeuds[i].v;
+    }
+    *medvar = somme / cmpt;
+}
+
+/**
+ * @brief appel les differente fonction pour le filtrage
+ * 
+ * @param quadtree 
+ * @param alpha 
+ */
+void quadtreeFiltrage(TabQuadtree* quadtree, double alpha){
+    double medvar = 0.0, maxvar = 0.0;
+
+    calculvar(quadtree, &maxvar, &medvar);
+    filtrage(quadtree, medvar / maxvar, alpha, 0);
+}
+
+TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int profondeur, double alpha){
+    TabQuadtree quadtree = initQuadtree(profondeur + 1);
+    rempliQuadtreePGM(tailleImage, 0, 0, image, &quadtree, 0);
+    quadtreeFiltrage(&quadtree, alpha);
+    return quadtree;
+}
+
 int trouverParent(int index) {
     return (index - 1) / 4;
 }

@@ -12,8 +12,9 @@
  * @param nomEntrer 
  * @param nomSortie 
  * @param grille 
- * @param verbeux 
+ * @param verbeux
+ * @param alpha
  */
-void codage(char* nomEntrer, char* nomSortie, int grille, int verbeux);
+void codage(char* nomEntrer, char* nomSortie, int grille, int verbeux, double alpha);
 
 #endif

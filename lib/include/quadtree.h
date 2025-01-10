@@ -11,6 +11,7 @@ typedef struct noeud{
     unsigned char epsilon; //valeur d'erreur de l'extrapolation
     unsigned char u; // bit uniforme
     int affiche; // flag si je dois ecrire le noeud dans le qtc
+    double v; //variance
     // struct noeud *hg, *hd, *bg, *bd; pointeur vers le carre cree par la subdivision
 }Noeud;
 
@@ -29,7 +30,7 @@ typedef struct quadtree{
  * @param alpha
  * @return TabQuadtree 
  */
-TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int profondeur);
+TabQuadtree constructeurQuadtreePGM(int tailleImage, unsigned char** image, int profondeur, double alpha);
 
 /**
  * @brief construit le quadtree en lisant le .qtc
@@ -62,5 +63,13 @@ void libereQuadtree(TabQuadtree* quadtree);
  * @return int** 
  */
 int** creeGrille(TabQuadtree quadtree, int taille);
+
+/**
+ * @brief trouve parent de index
+ * 
+ * @param index 
+ * @return int 
+ */
+int trouverParent(int index);
 
 #endif

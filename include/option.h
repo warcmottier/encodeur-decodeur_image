@@ -12,6 +12,7 @@ typedef struct {
     int g; // affichier la grille 1 si oui 0 sinon
     int v; // mode verbeux
     int o; // si il y a eu un renomage
+    double alpha; // alpha du filtrage
 }Option;
 
 /**

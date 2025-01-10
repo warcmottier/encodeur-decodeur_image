@@ -18,6 +18,7 @@ Option init_Option(){
     opt.g = 0;
     opt.v = 0;
     opt.o = 0;
+    opt.alpha = 1.0;
     return opt;
 }
 
@@ -48,7 +49,7 @@ int check_file_extension(const char* filename, const char* extension) {
 
 void choixOption(Option* opt, int argc, char* argv[]) {
     int opt_char; 
-    while ((opt_char = getopt(argc, argv, "cui:o:gvh")) != -1) {
+    while ((opt_char = getopt(argc, argv, "cui:a:o:gvh")) != -1) {
         switch (opt_char) {
             case 'c':
                 opt->c = 1;
@@ -58,6 +59,9 @@ void choixOption(Option* opt, int argc, char* argv[]) {
                 break;
             case 'i':
                 opt->nomEntrer = strdup(optarg);
+                break;
+            case 'a':
+                opt->alpha = strtod(optarg, NULL);
                 break;
             case 'o':
                 opt->o = 1;
@@ -106,7 +110,7 @@ void choixOption(Option* opt, int argc, char* argv[]) {
     }
 
     // Vérification de l'extension du fichier d'entrée
-    if(opt->nomSortie != NULL){
+    if(opt->o == 1){
         if (opt->c && !check_file_extension(opt->nomSortie, ".qtc")) {
             fprintf(stderr, "Erreur : Avec l'option -o, le fichier de sortie doit avoir l'extension .pgm si vous avez mis l'option -c.\n");
             exit(EXIT_FAILURE);
@@ -131,12 +135,13 @@ void choixOption(Option* opt, int argc, char* argv[]) {
         printf("  Fichier d'entrée : %s\n", opt->nomEntrer);
         printf("  Fichier de sortie : %s\n", opt->nomSortie);
         printf("  Grille : %s\n", opt->g ? "Activée" : "Désactivée");
+        printf("  Alpha : %f\n", opt->alpha);
     }
 }
 
 void lanceAlgo(Option opt){
     if(opt.c){
-        codage(opt.nomEntrer, opt.nomSortie, opt.g, opt.v);
+        codage(opt.nomEntrer, opt.nomSortie, opt.g, opt.v, opt.alpha);
     }
     else if(opt.u){
         decode(opt.nomEntrer, opt.nomSortie, opt.g, opt.v);
